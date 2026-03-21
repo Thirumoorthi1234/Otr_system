@@ -90,9 +90,6 @@ renderSidebar($_SESSION['role']);
     <?php endif; ?>
 
     <?php if ($action == 'list'): ?>
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="employeeSearch" placeholder="Search employees by name, role, or ID..." class="form-control" style="width: 100%; max-width: 400px; border-radius: 8px; padding: 10px 15px;" onkeyup="filterUsers()">
-        </div>
         <div class="table-container">
             <table style="border-collapse: collapse; width: 100%;">
                 <thead>
@@ -110,7 +107,7 @@ renderSidebar($_SESSION['role']);
                     $stmt = $pdo->query("SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC");
                     while ($user = $stmt->fetch()):
                     ?>
-                    <tr class="main-row" onclick="toggleDetails(this)" style="cursor: pointer; border-bottom: 1px solid var(--border-color); background: var(--white); transition: background 0.2s;">
+                    <tr class="main-row" style="cursor: pointer; border-bottom: 1px solid var(--border-color); background: var(--white); transition: background 0.2s;">
                         <td style="text-align: left; padding: 12px 15px;">
                             <i class="fas fa-caret-right expand-icon" style="margin-right:8px; color:#a0aec0; transition: transform 0.2s;"></i>
                             <strong><?php echo e($user['full_name']); ?></strong>
@@ -145,7 +142,23 @@ renderSidebar($_SESSION['role']);
                                         <div><strong>Batch Number:</strong> <?php echo e($user['batch_number'] ? $user['batch_number'] : '-'); ?></div>
                                     </div>
                                     <div style="margin-top: 15px;">
-                                        <a href="reports.php" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;"><i class="fas fa-chart-bar"></i> Full Employee Report</a>
+                                        <?php
+                                        $popupData = [
+                                            'name' => $user['full_name'],
+                                            'role' => ucfirst($user['role'] == 'management' ? 'Manager' : $user['role']),
+                                            'emp_id' => $user['employee_id'] ?? '-',
+                                            'dept' => $user['department'] ?? '-',
+                                            'username' => $user['username'],
+                                            'doj' => $user['doj'] ? date('d M Y', strtotime($user['doj'])) : '-',
+                                            'qualification' => $user['qualification'] ? $user['qualification'] : '-',
+                                            'category' => $user['category'] ? $user['category'] : '-',
+                                            'batch' => $user['batch_number'] ? $user['batch_number'] : '-',
+                                            'photo' => !empty($user['photo_path']) ? BASE_URL . $user['photo_path'] : ''
+                                        ];
+                                        ?>
+                                        <button type="button" class="btn btn-primary" style="padding: 6px 15px; font-size: 0.85rem;" onclick="showProfilePopup(<?php echo htmlspecialchars(json_encode($popupData), ENT_QUOTES, 'UTF-8'); ?>)">
+                                            <i class="fas fa-user-circle" style="margin-right: 5px;"></i> View Profile
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -156,40 +169,42 @@ renderSidebar($_SESSION['role']);
             </table>
         </div>
         <script>
-        function toggleDetails(row) {
-            const detailsRow = row.nextElementSibling;
-            const icon = row.querySelector('.expand-icon');
-            if (detailsRow.style.display === 'none') {
-                detailsRow.style.display = 'table-row';
-                icon.style.transform = 'rotate(90deg)';
-                row.style.background = '#f8fafc';
-            } else {
-                detailsRow.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-                row.style.background = 'var(--white)';
-            }
-        }
+        function showProfilePopup(data) {
+            let imgHtml = data.photo 
+                ? `<img src="${data.photo}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 3px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">`
+                : `<div style="width: 100px; height: 100px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #a0aec0; margin: 10px auto; border: 3px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><i class="fas fa-user"></i></div>`;
 
-        function filterUsers() {
-            const input = document.getElementById('employeeSearch').value.toLowerCase();
-            const rows = document.querySelectorAll('tbody .main-row');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(input)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                    const detailsRow = row.nextElementSibling;
-                    if (detailsRow && detailsRow.classList.contains('details-row')) {
-                        detailsRow.style.display = 'none';
-                        const icon = row.querySelector('.expand-icon');
-                        if (icon) icon.style.transform = 'rotate(0deg)';
-                        row.style.background = 'var(--white)';
-                    }
+            let html = `
+                ${imgHtml}
+                <h3 style="margin: 10px 0 5px 0; font-family: 'Outfit', sans-serif; color: var(--brand-navy);">${data.name}</h3>
+                <p style="color: var(--text-muted); margin-bottom: 25px; font-weight: 500; font-size: 0.95rem;">
+                    <span class="badge" style="background: rgba(14, 165, 233, 0.1); color: var(--primary-blue); margin-right: 5px;">${data.role}</span>
+                    <i class="far fa-building"></i> ${data.dept}
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; padding: 20px; background: #f8fafc; border-radius: 12px; font-size: 0.9rem; border: 1px solid #e2e8f0;">
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-id-badge"></i> Emp ID</strong><br><span style="color: #1e293b; font-weight: 600; font-size: 1rem;">${data.emp_id}</span></div>
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-user-tag"></i> Username</strong><br><span style="color: #1e293b; font-weight: 600;">${data.username}</span></div>
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-calendar-alt"></i> Joined</strong><br><span style="color: #1e293b; font-weight: 600;">${data.doj}</span></div>
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-graduation-cap"></i> Qual.</strong><br><span style="color: #1e293b; font-weight: 600;">${data.qualification}</span></div>
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-briefcase"></i> Category</strong><br><span style="color: #1e293b; font-weight: 600;">${data.category}</span></div>
+                    <div><strong style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-layer-group"></i> Batch</strong><br><span style="color: #1e293b; font-weight: 600;">${data.batch}</span></div>
+                </div>
+            `;
+
+            Swal.fire({
+                html: html,
+                showCloseButton: true,
+                showConfirmButton: false,
+                padding: '2em',
+                width: '450px',
+                customClass: {
+                    popup: 'profile-popup'
                 }
             });
         }
         </script>
+
     <?php else: 
         $user = ['id' => '', 'username' => '', 'full_name' => '', 'role' => 'trainee', 'employee_id' => '', 'photo_path' => '', 'batch_number' => ''];
         if ($action == 'edit' && isset($_GET['id'])) {

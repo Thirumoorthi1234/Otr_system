@@ -199,6 +199,60 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.stat-card').forEach((el, i) => {
         el.style.animationDelay = (i * 0.08) + 's';
     });
+
+    // ── Initialize DataTables ──────────────────────────────────
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('.table-container table').each(function() {
+            var table = $(this);
+            var hasDetails = false;
+            
+            // Step 1: Handle details-row by extracting them and removing from DOM
+            table.find('tbody tr.main-row').each(function() {
+                var mainRow = $(this);
+                var nextRow = mainRow.next();
+                if (nextRow.hasClass('details-row')) {
+                    hasDetails = true;
+                    mainRow.data('child-html', nextRow.find('td').html());
+                    // Remove from DOM before DataTables init
+                    nextRow.remove();
+                }
+            });
+
+            // Step 2: Initialize DataTables
+            if (!$.fn.DataTable.isDataTable(this)) {
+                var dt = table.DataTable({
+                    pageLength: 10,
+                    responsive: true,
+                    language: {
+                        search: "Search:",
+                        lengthMenu: "_MENU_ entries per page"
+                    },
+                    order: [] // Disable initial sorting
+                });
+
+                // Step 3: Attach click event for child rows if applicable
+                if (hasDetails) {
+                    table.find('tbody').on('click', 'tr.main-row', function() {
+                        var tr = $(this);
+                        var row = dt.row(tr);
+                        var icon = tr.find('.expand-icon');
+                        
+                        if (row.child.isShown()) {
+                            row.child.hide();
+                            tr.removeClass('shown');
+                            tr.css('background', ''); 
+                            if(icon.length) icon.css('transform', 'rotate(0deg)');
+                        } else {
+                            row.child(tr.data('child-html')).show();
+                            tr.addClass('shown');
+                            tr.css('background', '#f8fafc');
+                            if(icon.length) icon.css('transform', 'rotate(90deg)');
+                        }
+                    });
+                }
+            }
+        });
+    }
 });
 
 // Refresh unread count every 60s

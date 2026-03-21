@@ -27,9 +27,7 @@ renderSidebar($_SESSION['role']);
         </div>
     <?php endif; ?>
 
-    <div style="margin-bottom: 20px;">
-        <input type="text" id="inactiveSearch" placeholder="Search inactive members..." class="form-control" style="width: 100%; max-width: 400px; border-radius: 8px; padding: 10px 15px;" onkeyup="filterInactive()">
-    </div>
+
 
     <div class="table-container">
         <table style="border-collapse: collapse; width: 100%;">
@@ -64,19 +62,6 @@ renderSidebar($_SESSION['role']);
     </div>
 </div>
 
-<script>
-function filterInactive() {
-    const input = document.getElementById('inactiveSearch').value.toLowerCase();
-    const rows = document.querySelectorAll('tbody .main-row');
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        if (text.includes(input)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-</script>
+
 
 <?php renderFooter(); ?>
