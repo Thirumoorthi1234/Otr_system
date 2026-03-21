@@ -48,6 +48,10 @@ function renderSidebar($role) {
                 <i class="fas fa-users"></i>
                 <span class="menu-text">User Management</span>
             </a>
+            <a href="<?php echo BASE_URL; ?>admin/inactive_users.php" class="menu-item <?php echo isActive('inactive_users.php'); ?>" data-label="Inactive Users">
+                <i class="fas fa-users-slash"></i>
+                <span class="menu-text">Inactive Members</span>
+            </a>
             <a href="<?php echo BASE_URL; ?>admin/modules.php" class="menu-item <?php echo isActive('modules.php'); ?>" data-label="Modules">
                 <i class="fas fa-book"></i>
                 <span class="menu-text">Training Modules</span>

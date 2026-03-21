@@ -62,10 +62,10 @@ if (isset($_POST['save_user'])) {
     $action = 'list';
 }
 
-if ($action == 'delete' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+if ($action == 'inactive' && isset($_GET['id'])) {
+    $stmt = $pdo->prepare("UPDATE users SET status = 'inactive' WHERE id = ?");
     $stmt->execute([$_GET['id']]);
-    $message = "User deleted!";
+    $message = "User moved to Inactive Members!";
     $action = 'list';
 }
 
@@ -90,40 +90,106 @@ renderSidebar($_SESSION['role']);
     <?php endif; ?>
 
     <?php if ($action == 'list'): ?>
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="employeeSearch" placeholder="Search employees by name, role, or ID..." class="form-control" style="width: 100%; max-width: 400px; border-radius: 8px; padding: 10px 15px;" onkeyup="filterUsers()">
+        </div>
         <div class="table-container">
-            <table>
+            <table style="border-collapse: collapse; width: 100%;">
                 <thead>
                     <tr>
-                        <th style="text-align: left;">Full Name</th>
-                        <th style="text-align: left;">Username</th>
-                        <th style="text-align: center;">Role</th>
-                        <th style="text-align: center;">Emp ID</th>
-                        <th style="text-align: left;">Department</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th style="text-align: left; padding: 12px 15px;">Full Name</th>
+                        <th style="text-align: left; padding: 12px 15px;">Username</th>
+                        <th style="text-align: center; padding: 12px 15px;">Role</th>
+                        <th style="text-align: center; padding: 12px 15px;">Emp ID</th>
+                        <th style="text-align: left; padding: 12px 15px;">Department</th>
+                        <th style="text-align: center; padding: 12px 15px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $stmt = $pdo->query("SELECT * FROM users ORDER BY created_at DESC");
+                    $stmt = $pdo->query("SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC");
                     while ($user = $stmt->fetch()):
                     ?>
-                    <tr>
-                        <td style="text-align: left;"><strong><?php echo e($user['full_name']); ?></strong></td>
-                        <td style="text-align: left; color: var(--text-muted);"><?php echo e($user['username']); ?></td>
-                        <td style="text-align: center;"><span class="badge" style="background: rgba(14, 165, 233, 0.1); color: var(--primary-blue);"><?php echo $user['role'] == 'management' ? 'Manager' : ucfirst($user['role']); ?></span></td>
-                        <td style="text-align: center; font-family: 'Outfit', sans-serif; font-weight: 600;"><?php echo e($user['employee_id'] ?? '-'); ?></td>
-                        <td style="text-align: left; font-size: 0.8rem;"><?php echo e($user['department'] ?? '-'); ?></td>
-                        <td style="text-align: center;">
-                            <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" style="color: var(--primary-blue); margin-right: 15px;"><i class="fas fa-edit"></i></a>
+                    <tr class="main-row" onclick="toggleDetails(this)" style="cursor: pointer; border-bottom: 1px solid var(--border-color); background: var(--white); transition: background 0.2s;">
+                        <td style="text-align: left; padding: 12px 15px;">
+                            <i class="fas fa-caret-right expand-icon" style="margin-right:8px; color:#a0aec0; transition: transform 0.2s;"></i>
+                            <strong><?php echo e($user['full_name']); ?></strong>
+                        </td>
+                        <td style="text-align: left; color: var(--text-muted); padding: 12px 15px;"><?php echo e($user['username']); ?></td>
+                        <td style="text-align: center; padding: 12px 15px;"><span class="badge" style="background: rgba(14, 165, 233, 0.1); color: var(--primary-blue);"><?php echo $user['role'] == 'management' ? 'Manager' : ucfirst($user['role']); ?></span></td>
+                        <td style="text-align: center; font-family: 'Outfit', sans-serif; font-weight: 600; padding: 12px 15px;"><?php echo e($user['employee_id'] ?? '-'); ?></td>
+                        <td style="text-align: left; font-size: 0.8rem; padding: 12px 15px;"><?php echo e($user['department'] ?? '-'); ?></td>
+                        <td style="text-align: center; padding: 12px 15px;" onclick="event.stopPropagation();">
+                            <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" style="color: var(--primary-blue); margin-right: 15px;" title="Edit"><i class="fas fa-edit"></i></a>
                             <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                            <a href="users.php?action=delete&id=<?php echo $user['id']; ?>" style="color: var(--danger);" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                            <a href="users.php?action=inactive&id=<?php echo $user['id']; ?>" style="color: var(--danger);" onclick="return confirm('Inactivate this user? Data will be transferred to Inactive Members.')" title="Inactivate"><i class="fas fa-user-slash"></i></a>
                             <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr class="details-row" style="display: none; background: #fafafa; border-bottom: 2px solid var(--border-color);">
+                        <td colspan="6" style="padding: 20px 25px;">
+                            <div style="display: flex; gap: 20px;">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #e2e8f0; flex-shrink: 0;">
+                                    <?php if (!empty($user['photo_path'])): ?>
+                                        <img src="<?php echo BASE_URL . $user['photo_path']; ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <?php else: ?>
+                                        <div style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #a0aec0;"><i class="fas fa-user"></i></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="flex-grow: 1;">
+                                    <h4 style="margin: 0 0 10px 0; color: var(--text-main); font-size: 1.1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">Profile Details</h4>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; color: #4a5568;">
+                                        <div><strong>Date of Joining:</strong> <?php echo $user['doj'] ? date('d M Y', strtotime($user['doj'])) : '-'; ?></div>
+                                        <div><strong>Qualification:</strong> <?php echo e($user['qualification'] ? $user['qualification'] : '-'); ?></div>
+                                        <div><strong>Category:</strong> <?php echo e($user['category'] ? $user['category'] : '-'); ?></div>
+                                        <div><strong>Batch Number:</strong> <?php echo e($user['batch_number'] ? $user['batch_number'] : '-'); ?></div>
+                                    </div>
+                                    <div style="margin-top: 15px;">
+                                        <a href="reports.php" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;"><i class="fas fa-chart-bar"></i> Full Employee Report</a>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
+        <script>
+        function toggleDetails(row) {
+            const detailsRow = row.nextElementSibling;
+            const icon = row.querySelector('.expand-icon');
+            if (detailsRow.style.display === 'none') {
+                detailsRow.style.display = 'table-row';
+                icon.style.transform = 'rotate(90deg)';
+                row.style.background = '#f8fafc';
+            } else {
+                detailsRow.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+                row.style.background = 'var(--white)';
+            }
+        }
+
+        function filterUsers() {
+            const input = document.getElementById('employeeSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('tbody .main-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(input)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                    const detailsRow = row.nextElementSibling;
+                    if (detailsRow && detailsRow.classList.contains('details-row')) {
+                        detailsRow.style.display = 'none';
+                        const icon = row.querySelector('.expand-icon');
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                        row.style.background = 'var(--white)';
+                    }
+                }
+            });
+        }
+        </script>
     <?php else: 
         $user = ['id' => '', 'username' => '', 'full_name' => '', 'role' => 'trainee', 'employee_id' => '', 'photo_path' => '', 'batch_number' => ''];
         if ($action == 'edit' && isset($_GET['id'])) {
