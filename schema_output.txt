@@ -1,0 +1,84 @@
+Column: id
+  Type: int(11)
+  Null: NO
+  Key: PRI
+  Default: 
+  Extra: auto_increment
+Column: assignment_id
+  Type: int(11)
+  Null: YES
+  Key: MUL
+  Default: 
+  Extra: 
+Column: trainee_id
+  Type: int(11)
+  Null: NO
+  Key: MUL
+  Default: 
+  Extra: 
+Column: trainer_id
+  Type: int(11)
+  Null: YES
+  Key: MUL
+  Default: 
+  Extra: 
+Column: rating_overall
+  Type: enum('A','B','C','D')
+  Null: NO
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_skill
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_explanation
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_time
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: comments
+  Type: text
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: submitted_at
+  Type: timestamp
+  Null: NO
+  Key: 
+  Default: current_timestamp()
+  Extra: 
+Column: rating_learning_skill
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_learning_knowledge
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_learning_attitude
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
+Column: rating_improvement
+  Type: enum('A','B','C','D')
+  Null: YES
+  Key: 
+  Default: 
+  Extra: 
