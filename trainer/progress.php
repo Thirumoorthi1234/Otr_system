@@ -40,9 +40,7 @@ if (!$assignment_id) {
                         <td><a href="progress.php?assignment_id=<?php echo $row['id']; ?>" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;">Select</a></td>
                     </tr>
                     <?php endwhile; ?>
-                    <?php if ($stmt->rowCount() == 0): ?>
-                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">No active training assignments found.</td></tr>
-                    <?php endif; ?>
+
                 </tbody>
             </table>
         </div>
@@ -138,9 +136,7 @@ renderSidebar('trainer');
                         <td><?php echo $st['man_hours']; ?> hrs</td>
                     </tr>
                     <?php endwhile; ?>
-                    <?php if ($stmt->rowCount() == 0): ?>
-                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">No stages certified yet.</td></tr>
-                    <?php endif; ?>
+
                 </tbody>
             </table>
         </div>
