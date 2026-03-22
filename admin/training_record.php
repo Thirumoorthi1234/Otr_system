@@ -197,7 +197,7 @@ $indu_percent = $indu_total > 0 ? round(($indu_done / $indu_total) * 100) : 0;
             <div style="display: flex; gap: 15px; align-items: center;">
                 <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" style="height: 50px;" alt="Syrma SGS">
                 <div style="width: 2px; height: 35px; background: #E2E8F0;"></div>
-                <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo copy.svg" style="height: 40px;" alt="Learnlike">
+                <img src="<?php echo BASE_URL; ?>assets/img/profiles/powered_by.svg" style="height: 40px;" alt="Learnlike">
             </div>
         </div>
         <div class="report-title">

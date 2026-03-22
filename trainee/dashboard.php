@@ -143,9 +143,7 @@ renderSidebar('trainee');
                     </td>
                 </tr>
                 <?php endwhile; ?>
-                <?php if ($stmt->rowCount() == 0): ?>
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">No exams currently available. Complete your training first!</td></tr>
-                <?php endif; ?>
+
             </tbody>
         </table>
     </div>

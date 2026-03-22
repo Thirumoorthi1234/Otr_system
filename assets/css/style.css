@@ -358,8 +358,10 @@ a { text-decoration: none; }
 .sidebar.collapsed .pb-label { opacity:0; height:0; overflow:hidden; margin:0; }
 .sidebar.collapsed .powered-by-bar img { 
   opacity: 1; 
-  height: 20px; 
-  width: auto;
+  height: 22px; 
+  width: 24px;
+  object-fit: cover;
+  object-position: left center;
   filter: none !important;
 }
 

@@ -112,8 +112,8 @@ if (!$assignment_id && $exam_id) {
         background: #edf2f7;
     }
     @media (max-width: 768px) {
-        .trainer-select-container { padding: 15px !important; }
-        select { font-size: 0.9rem !important; padding: 12px !important; }
+        .trainer-select-container { padding: 15px !important; overflow: hidden; max-width: 100%; }
+        select { font-size: 0.9rem !important; padding: 12px !important; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     }
     textarea:focus, select:focus {
         outline: none;
@@ -123,12 +123,16 @@ if (!$assignment_id && $exam_id) {
     }
     
     @media (max-width: 768px) {
-        .card { padding: 20px !important; border-radius: 20px !important; }
+        .card { padding: 20px !important; border-radius: 20px !important; overflow: hidden; width: 100%; box-sizing: border-box; }
         .feedback-grid { gap: 12px !important; }
-        .feedback-grid > div { flex-direction: column !important; align-items: flex-start !important; padding: 15px !important; }
+        .feedback-grid > div { flex-direction: column !important; align-items: flex-start !important; padding: 15px !important; width: 100%; box-sizing: border-box; }
         .feedback-grid > div > div { width: 100%; justify-content: space-between; margin-top: 10px; }
-        .rating-box { width: 40px !important; height: 40px !important; }
-        h2 { font-size: 1.4rem !important; }
+        .rating-box { width: 40px !important; height: 40px !important; flex-shrink: 0; }
+        h2 { font-size: 1.4rem !important; word-wrap: break-word; }
+        button[type="submit"] { padding: 15px 20px !important; width: 100% !important; font-size: 1.1rem !important; box-sizing: border-box; }
+        .trainer-select-container { padding: 15px !important; overflow: hidden; width: 100%; box-sizing: border-box; }
+        select { font-size: 0.9rem !important; padding: 12px !important; width: 100% !important; box-sizing: border-box; }
+        select option { white-space: normal; word-wrap: break-word; }
     }
 </style>
 

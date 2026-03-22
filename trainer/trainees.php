@@ -20,13 +20,13 @@ renderSidebar('trainer');
         <table style="border-collapse: collapse; width: 100%;">
             <thead>
                 <tr>
-                    <th>Photo</th>
-                    <th>Name</th>
-                    <th>Emp ID</th>
-                    <th>Module</th>
-                    <th>Start Date</th>
-                    <th>Efficiency / Progress</th>
-                    <th>Actions</th>
+                    <th style="width: 5%;">Photo</th>
+                    <th style="width: 15%; white-space: nowrap;">Name</th>
+                    <th style="width: 12%; white-space: nowrap;">Emp ID</th>
+                    <th style="width: 25%; min-width: 150px;">Module</th>
+                    <th style="width: 12%;">Start Date</th>
+                    <th style="width: 16%;">Efficiency / Progress</th>
+                    <th style="width: 15%;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,13 +84,13 @@ renderSidebar('trainer');
                             </div>
                         </div>
                     </td>
-                    <td style="padding: 12px 15px;">
+                    <td style="padding: 12px 15px; white-space: nowrap;">
                         <strong><?php echo e($row['trainee_name']); ?></strong>
                         <?php if ($row['is_locked']): ?>
                             <span class="badge badge-danger" style="font-size: 0.65rem; margin-left: 5px;">LOCKED</span>
                         <?php endif; ?>
                     </td>
-                    <td style="padding: 12px 15px;"><?php echo e($row['employee_id']); ?></td>
+                    <td style="padding: 12px 15px; white-space: nowrap;"><?php echo e($row['employee_id']); ?></td>
                     <td style="padding: 12px 15px;"><?php echo e($row['module_name']); ?></td>
                     <td style="padding: 12px 15px;"><?php echo formatDate($row['assigned_date']); ?></td>
                     <td style="padding: 12px 15px;">
@@ -106,7 +106,7 @@ renderSidebar('trainer');
                             elseif ($otj_eff > 0) { $oClass = 'average'; }
                             else { $oClass = 'low'; }
                             ?>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                                 <span class="efficiency-badge <?php echo $tClass; ?>" style="font-size: 0.7rem; padding: 3px 8px;">
                                     <i class="fas fa-bolt"></i> <?php echo $training_eff; ?>%
                                 </span>
@@ -121,7 +121,7 @@ renderSidebar('trainer');
                         <?php endif; ?>
                     </td>
                     <td style="padding: 12px 15px;" onclick="event.stopPropagation();">
-                        <div style="display: flex; gap: 8px; justify-content: flex-start; width: 300px;">
+                        <div style="display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap;">
                             <?php if ($row['is_locked']): ?>
                                 <button onclick="unlockAssignment(<?php echo $row['id']; ?>)" class="btn" style="background: #38a169; color: white; font-size: 0.75rem; padding: 6px 12px;">
                                     <i class="fas fa-unlock"></i> Unlock Exam

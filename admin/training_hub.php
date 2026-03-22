@@ -229,7 +229,7 @@ renderSidebar($_SESSION['role']);
                     <?php endif; ?>
                     <div class="form-group">
                         <label class="form-label">Training Type</label>
-                        <select name="type" class="form-control" required style="background: #2D3748;">
+                        <select name="type" class="form-control" required>
                             <option value="sdc" <?php echo ($edit_stage && $edit_stage['type'] == 'sdc') ? 'selected' : ''; ?>>Practical (SDC)</option>
                             <option value="otj" <?php echo ($edit_stage && $edit_stage['type'] == 'otj') ? 'selected' : ''; ?>>OTJ (Shop Floor)</option>
                             <option value="recertification" <?php echo ($edit_stage && $edit_stage['type'] == 'recertification') ? 'selected' : ''; ?>>Recertification</option>
