@@ -95,7 +95,7 @@ renderSidebar($_SESSION['role']);
         </div>
         <div class="form-group">
             <label class="form-label">Training Module</label>
-            <select name="module_id" class="form-control" required style="background: #2D3748;">
+            <select name="module_id" class="form-control" required>
                 <?php
                 $modules = $pdo->query("SELECT id, title FROM training_modules");
                 while ($m = $modules->fetch()) {

@@ -60,7 +60,7 @@ renderSidebar('admin');
         $count = 1;
         while ($q = $stmt->fetch()):
         ?>
-        <div style="background: #2D3748; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+        <div style="background: var(--sidebar-hover); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color);">
             <div style="display: flex; justify-content: space-between;">
                 <strong>Q<?php echo $count++; ?>: <?php echo e($q['question_text']); ?></strong>
                 <div>
@@ -110,7 +110,7 @@ renderSidebar('admin');
         </div>
         <div class="form-group" style="width: 200px;">
             <label class="form-label">Correct Option</label>
-            <select name="correct_option" class="form-control" style="background: #2D3748;">
+            <select name="correct_option" class="form-control">
                 <option value="A" <?php echo $q['correct_option'] == 'A' ? 'selected' : ''; ?>>Option A</option>
                 <option value="B" <?php echo $q['correct_option'] == 'B' ? 'selected' : ''; ?>>Option B</option>
                 <option value="C" <?php echo $q['correct_option'] == 'C' ? 'selected' : ''; ?>>Option C</option>
