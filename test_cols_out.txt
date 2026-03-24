@@ -1,0 +1,39 @@
+Array
+(
+    [0] => id
+    [1] => assignment_id
+    [2] => trainee_id
+    [3] => trainer_id
+    [4] => rating_overall
+    [5] => rating_skill
+    [6] => rating_explanation
+    [7] => rating_time
+    [8] => comments
+    [9] => submitted_at
+    [10] => rating_learning_skill
+    [11] => rating_learning_knowledge
+    [12] => rating_learning_attitude
+    [13] => rating_improvement
+)
+Array
+(
+    [0] => id
+    [1] => trainee_id
+    [2] => exam_id
+    [3] => score
+    [4] => max_score
+    [5] => status
+    [6] => exam_date
+)
+Array
+(
+    [0] => id
+    [1] => trainee_id
+    [2] => trainer_id
+    [3] => module_id
+    [4] => status
+    [5] => assigned_date
+    [6] => completion_date
+    [7] => is_locked
+    [8] => proctor_alerts
+)

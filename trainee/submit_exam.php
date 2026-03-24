@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
+checkRole(['trainee']);
+
 $exam_id = $_POST['exam_id'];
 $trainee_id = $_SESSION['user_id'];
 
@@ -35,7 +37,7 @@ $passing = $stmt->fetchColumn();
 $status = $score >= $passing ? 'pass' : 'fail';
 
 // Save Result
-$stmt = $pdo->prepare("INSERT INTO exam_results (trainee_id, exam_id, score, status, exam_date) VALUES (?, ?, ?, ?, NOW())");
+$stmt = $pdo->prepare("INSERT INTO exam_results (trainee_id, exam_id, score, max_score, status, exam_date) VALUES (?, ?, ?, 100, ?, NOW())");
 $stmt->execute([$trainee_id, $exam_id, $score, $status]);
 $result_id = $pdo->lastInsertId();
 
