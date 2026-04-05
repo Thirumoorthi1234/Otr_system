@@ -222,7 +222,7 @@ function getTopicsBySection($progress, $section) {
         </div>
     </div>
 
-    <div class="footer">Page 3 of 7</div>
+    <div class="footer">Page 3 of 8</div>
 </div>
 
 </body>

@@ -18,14 +18,16 @@ $stmt = $pdo->prepare("SELECT * FROM feedback WHERE trainee_id = ? ORDER BY subm
 $stmt->execute([$trainee_id]);
 $f = $stmt->fetch();
 
-if (!$f) die("No feedback found for this trainee.");
+$no_data = !$f;
 
-// Calculate totals for each rank
+// Calculate totals for each rank if data exists
 $ranks = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0];
-$fields = ['rating_overall', 'rating_learning_skill', 'rating_learning_knowledge', 'rating_learning_attitude', 'rating_explanation', 'rating_improvement', 'rating_time'];
-foreach ($fields as $field) {
-    if (isset($f[$field])) {
-        $ranks[$f[$field]]++;
+if ($f) {
+    $fields = ['rating_overall', 'rating_learning_skill', 'rating_learning_knowledge', 'rating_learning_attitude', 'rating_explanation', 'rating_improvement', 'rating_time'];
+    foreach ($fields as $field) {
+        if (isset($f[$field]) && isset($ranks[$f[$field]])) {
+            $ranks[$f[$field]]++;
+        }
     }
 }
 ?>
@@ -70,6 +72,28 @@ foreach ($fields as $field) {
 </div>
 
 <div class="paper">
+    <?php if ($no_data): ?>
+        <div class="header" style="margin-bottom: 40px; border-bottom: 2px solid #F1F5F9; padding-bottom: 20px;">
+            <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" alt="Syrma SGS">
+            <div style="margin-left: auto; text-align: right;">
+                <div style="font-weight: 800; color: #0F172A; font-size: 1.1rem;">Feedback Summary</div>
+                <div style="color: #64748B; font-weight: 600; font-size: 0.85rem;"><?php echo date('d M Y'); ?></div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 100px 20px;">
+            <div style="width: 80px; height: 80px; background: #FEF3C7; color: #D97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 25px;">
+                <i class="fa-solid fa-file-circle-exclamation"></i>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 10px;">No Feedback Records Found</h2>
+            <p style="color: #64748B; font-weight: 600; font-size: 1rem; margin-bottom: 40px;">
+                We couldn't find any feedback submissions for <strong><?php echo e($trainee['full_name']); ?></strong> (ID: <?php echo e($trainee['employee_id']); ?>) at this time.
+            </p>
+            <a href="induction_records.php?trainee_id=<?php echo $trainee_id; ?>" style="background: #0F172A; color: white; padding: 12px 30px; border-radius: 12px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); display: inline-flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-arrow-left"></i> Go Back
+            </a>
+        </div>
+    <?php else: ?>
     <div class="header">
         <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" alt="Syrma SGS">
     </div>
@@ -129,21 +153,14 @@ foreach ($fields as $field) {
             </tr>
             <tr>
                 <td style="text-align: center;">4</td>
-                <td>COMMENT ABOUT THE FACULTY AND METHODOLOGY<br>OF THIS PROGRAMME</td>
-                <td colspan="4" style="font-size: 0.85rem; font-style: italic; vertical-align: top; height: 60px;">
-                    <?php echo e($f['comments']); ?>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">5</td>
-                <td>THE PROGRAMME HAS IMPROVED MY ABILITY TO PERFORM CURRENT / FUTURE TASKS</td>
+                <td>PROGRAMME IMPROVE MYSELF & TECHNICAL SKILL</td>
                 <?php foreach(['A','B','C','D'] as $r): ?>
                     <td class="rank-cell"><?php echo $f['rating_improvement'] == $r ? '<span class="check">&#10003;</span>' : ''; ?></td>
                 <?php endforeach; ?>
             </tr>
             <tr>
-                <td style="text-align: center;">6</td>
-                <td>TIME MANAGEMENT DURING TRAINING</td>
+                <td style="text-align: center;">5</td>
+                <td>PROGRAMME DURATION / TIME WAS SUFFICIENT</td>
                 <?php foreach(['A','B','C','D'] as $r): ?>
                     <td class="rank-cell"><?php echo $f['rating_time'] == $r ? '<span class="check">&#10003;</span>' : ''; ?></td>
                 <?php endforeach; ?>
@@ -151,11 +168,26 @@ foreach ($fields as $field) {
         </tbody>
     </table>
 
+    <div style="font-weight: bold; margin-bottom: 20px;">6. Any further comments / suggestion on the outcome based on training :</div>
+    <div style="border-bottom: 1px solid #000; min-height: 50px; margin-bottom: 40px;"><?php echo e($f['comments'] ?? ''); ?></div>
+
     <table class="summary-box">
-        <tr><td>TOTAL OF RANK "A" - EXCELLENT</td><td><?php echo $ranks['A']; ?></td></tr>
-        <tr><td>TOTAL OF RANK "B" - GOOD</td><td><?php echo $ranks['B']; ?></td></tr>
-        <tr><td>TOTAL OF RANK "C" - UNDERSTANDABLE</td><td><?php echo $ranks['C']; ?></td></tr>
-        <tr><td>TOTAL OF RANK "D" - CAN'T UNDERSTANDABLE</td><td><?php echo $ranks['D']; ?></td></tr>
+        <tr>
+            <td>A - Excellent (Rank - 1)</td>
+            <td style="text-align: center; width: 60px;"><?php echo $ranks['A']; ?></td>
+        </tr>
+        <tr>
+            <td>B - Good (Rank - 2)</td>
+            <td style="text-align: center;"><?php echo $ranks['B']; ?></td>
+        </tr>
+        <tr>
+            <td>C - Can be better (Rank - 3)</td>
+            <td style="text-align: center;"><?php echo $ranks['C']; ?></td>
+        </tr>
+        <tr>
+            <td>D - Needs improvement (Rank - 4)</td>
+            <td style="text-align: center;"><?php echo $ranks['D']; ?></td>
+        </tr>
     </table>
 
     <div class="trainee-info">
@@ -164,9 +196,16 @@ foreach ($fields as $field) {
     </div>
 
     <div class="footer">
-        <span>SST3001FRM2097/D</span>
+        <span>SST3001FRM2097/D</span> | <span>Page 8 of 8</span>
     </div>
+    <?php endif; ?>
 </div>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Premium Font Support */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+</style>
 </body>
 </html>

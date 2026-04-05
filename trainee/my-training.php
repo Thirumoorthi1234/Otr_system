@@ -5,39 +5,39 @@ checkRole('trainee');
 
 $trainee_id = $_SESSION['user_id'];
 
-renderHeader('My Training');
+renderHeader(__('my_training'));
 renderSidebar('trainee');
 
 // Fixed Modules as requested
 $modules_to_show = [
     [
         'id' => 1,
-        'title' => 'Induction Training',
+        'title' => __('induction_training'),
         'icon' => 'fa-book-open-reader',
         'color' => '#4e73df',
-        'desc' => 'Essential foundational training including Safety, PPE, 5S, and ESD concepts.'
+        'desc' => __('induction_training_desc')
     ],
     [
         'id' => 2,
-        'title' => 'Practical Training-SDC',
+        'title' => __('practical_training_sdc'),
         'icon' => 'fa-microchip',
         'color' => '#1cc88a',
-        'desc' => 'Hands-on skill development center training for technical proficiency.'
+        'desc' => __('practical_training_sdc_desc')
     ],
     [
         'id' => 3,
-        'title' => 'On the job training- shop floor',
+        'title' => __('otj_training_shop_floor'),
         'icon' => 'fa-industry',
         'color' => '#f6c23e',
-        'desc' => 'Real-world production floor training and operational experience.'
+        'desc' => __('otj_training_shop_floor_desc')
     ]
 ];
 ?>
 
 <div class="training-container" style="padding: 20px;">
     <div style="margin-bottom: 30px;">
-        <h2 style="font-weight: 800; color: var(--brand-navy); margin-bottom: 10px;">Your Training Modules</h2>
-        <p style="color: var(--text-muted);">Complete your assigned modules to progress in your training journey.</p>
+        <h2 style="font-weight: 800; color: var(--brand-navy); margin-bottom: 10px;"><?php echo __('your_training_modules'); ?></h2>
+        <p style="color: var(--text-muted);"><?php echo __('complete_assigned_modules_desc'); ?></p>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
@@ -70,17 +70,17 @@ $modules_to_show = [
                     <span class="badge <?php 
                         echo ($status == 'completed') ? 'badge-success' : (($status == 'in_progress') ? 'badge-info' : 'badge-warning'); 
                     ?>" style="font-size: 0.75rem;">
-                        <?php echo strtoupper(str_replace('_', ' ', $status)); ?>
+                        <?php echo strtoupper(__(str_replace('_', ' ', $status))); ?>
                     </span>
                 </div>
                 
                 <?php if ($status == 'completed'): ?>
                     <a href="course-material.php?id=<?php echo $mod['id']; ?>" class="btn" style="background: #edf2f7; color: var(--text-main); font-weight: 700; display: flex; align-items: center; gap: 8px; border-radius: 12px; padding: 10px 20px;">
-                        <i class="fas fa-eye"></i> Revisit Module
+                        <i class="fas fa-eye"></i> <?php echo __('revisit_module'); ?>
                     </a>
                 <?php else: ?>
                     <a href="course-material.php?id=<?php echo $mod['id']; ?>" class="btn btn-primary" style="padding: 10px 25px; border-radius: 12px; font-weight: 700; box-shadow: 0 8px 15px <?php echo $mod['color']; ?>30; background: <?php echo $mod['color']; ?>; border: none;">
-                        Start Training <i class="fas fa-arrow-right" style="margin-left: 8px; font-size: 0.8rem;"></i>
+                        <?php echo __('start_training'); ?> <i class="fas fa-arrow-right" style="margin-left: 8px; font-size: 0.8rem;"></i>
                     </a>
                 <?php endif; ?>
             </div>

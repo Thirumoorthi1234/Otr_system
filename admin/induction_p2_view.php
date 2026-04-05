@@ -178,7 +178,7 @@ function getTopicsBySection($progress, $section) {
         </div>
     </div>
 
-    <div class="footer">Page 2 of 7</div>
+    <div class="footer">Page 2 of 8</div>
 </div>
 
 </body>

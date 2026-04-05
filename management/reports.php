@@ -13,6 +13,41 @@ $stats = [
     'feedback' => $pdo->query("SELECT rating_overall, COUNT(*) as c FROM feedback GROUP BY rating_overall")->fetchAll(PDO::FETCH_KEY_PAIR)
 ];
 
+// Handle MIS CSV Export BEFORE headers are sent
+if (isset($_GET['export']) && $_GET['export'] == 'csv') {
+    $stmt = $pdo->query("
+        SELECT u.employee_id, u.full_name as trainee_name, u.department, u.batch_number, 
+               m.title as module_name, a.status as module_status, tr.full_name as trainer_name,
+               (SELECT MAX(score) FROM exam_results WHERE trainee_id = u.id AND exam_id IN (SELECT id FROM exams WHERE module_id = m.id)) as max_score
+        FROM users u 
+        LEFT JOIN assignments a ON u.id = a.trainee_id 
+        LEFT JOIN training_modules m ON a.module_id = m.id
+        LEFT JOIN users tr ON a.trainer_id = tr.id
+        WHERE u.role = 'trainee'
+        ORDER BY u.department, u.full_name
+    ");
+    $mis_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Clear any accidental whitespace
+    while (ob_get_level()) { ob_end_clean(); }
+    
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="MIS_Report_' . date('Y-m-d') . '.csv"');
+    
+    $output = fopen('php://output', 'w');
+    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // Forces Excel to read as UTF-8
+    fputcsv($output, ['Employee ID', 'Full Name', 'Department', 'Batch', 'Module', 'Module Status', 'Highest Score', 'Trainer Name']);
+    foreach ($mis_data as $row) {
+        fputcsv($output, [
+            $row['employee_id'], $row['trainee_name'], $row['department'], $row['batch_number'], 
+            $row['module_name'] ?? 'Unassigned', strtoupper($row['module_status'] ?? 'N/A'), 
+            $row['max_score'] !== null ? $row['max_score'].'%' : 'N/A', $row['trainer_name'] ?? 'N/A'
+        ]);
+    }
+    fclose($output);
+    exit;
+}
+
 renderHeader('Analytical Reports');
 renderSidebar('management');
 ?>
@@ -21,7 +56,6 @@ renderSidebar('management');
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-    /* Premium Dashboard Styling */
     .dashboard-container {
         font-family: 'Plus Jakarta Sans', sans-serif;
         background: #ffffff;
@@ -29,7 +63,7 @@ renderSidebar('management');
         border-radius: 24px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.03);
         width: 100%;
-        max-width: 100%; /* Better for responsiveness */
+        max-width: 965px; /* Better constraints for large screens */
         margin: 0 auto;
         position: relative;
     }
@@ -264,12 +298,13 @@ renderSidebar('management');
 <div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none;">
     <button onclick="togglePrintPreview()" class="btn-preview-close"><i class="fas fa-times"></i> Close Preview</button>
 
-    <div class="report-nav-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div class="report-nav-group" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%;">
         <div class="premium-tabs">
             <a href="reports.php?type=overview" class="btn <?php echo $report_type == 'overview' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-chart-pie" style="margin-right:8px;"></i> Dashboard Summary</a>
             <a href="reports.php?type=employee" class="btn <?php echo $report_type == 'employee' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-id-badge" style="margin-right:8px;"></i> Employee Report</a>
             <a href="reports.php?type=completion" class="btn <?php echo $report_type == 'completion' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-list-check" style="margin-right:8px;"></i> Completion List</a>
             <a href="reports.php?type=performance" class="btn <?php echo $report_type == 'performance' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-graduation-cap" style="margin-right:8px;"></i> Performance Log</a>
+            <a href="reports.php?type=mis" class="btn <?php echo $report_type == 'mis' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-database" style="margin-right:8px;"></i> MIS Report</a>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -761,6 +796,76 @@ renderSidebar('management');
                 </div>
             </div>
         </div>
+
+        <?php elseif ($report_type == 'mis'): ?>
+        <!-- ============================================== -->
+        <!-- 4. MIS REPORT (Management Information System) -->
+        <!-- ============================================== -->
+        <div class="dashboard-container">
+            <div class="db-header">
+                <div>
+                    <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" style="height: 35px; margin-bottom: 10px;" onerror="this.style.display='none';">
+                    <div class="db-title">Comprehensive MIS Report</div>
+                    <div class="db-subtitle">Enterprise Data & Global Training Metrics</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 700; color: #0EA5E9; font-size: 1.2rem;"><?php echo date('F d, Y'); ?></div>
+                    <a href="reports.php?type=mis&export=csv" class="btn" style="background:#10b981; color:#fff; padding:8px 16px; border-radius:8px; margin-top:8px; display:inline-block; font-size:0.85rem; font-weight:700; text-decoration:none;"><i class="fas fa-file-excel"></i> Export Excel</a>
+                </div>
+            </div>
+
+            <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #E2E8F0; border-radius: 12px;">
+                <table class="employee-data-table" style="min-width: 900px; margin: 0; border: none;">
+                    <thead style="background: #F8FAFC;">
+                        <tr>
+                            <th style="text-align: left; padding: 15px;">Emp ID</th>
+                            <th style="text-align: left; padding: 15px;">Full Name</th>
+                            <th style="text-align: left; padding: 15px;">Department</th>
+                            <th style="text-align: left; padding: 15px;">Batch</th>
+                            <th style="text-align: left; padding: 15px;">Module</th>
+                            <th style="text-align: center; padding: 15px;">Module Status</th>
+                            <th style="text-align: center; padding: 15px;">Highest Score</th>
+                            <th style="text-align: left; padding: 15px;">Trainer Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $stmt = $pdo->query("
+                            SELECT u.employee_id, u.full_name as trainee_name, u.department, u.batch_number, 
+                                   m.title as module_name, a.status as module_status, tr.full_name as trainer_name,
+                                   (SELECT MAX(score) FROM exam_results WHERE trainee_id = u.id AND exam_id IN (SELECT id FROM exams WHERE module_id = m.id)) as max_score
+                            FROM users u 
+                            LEFT JOIN assignments a ON u.id = a.trainee_id 
+                            LEFT JOIN training_modules m ON a.module_id = m.id
+                            LEFT JOIN users tr ON a.trainer_id = tr.id
+                            WHERE u.role = 'trainee'
+                            ORDER BY u.department, u.full_name
+                        ");
+                        $mis_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        foreach ($mis_data as $row):
+                        ?>
+                        <tr>
+                            <td style="font-weight: 700; color: #64748B; padding: 15px;"><?php echo e($row['employee_id']); ?></td>
+                            <td style="font-weight: 800; color: #0F172A; padding: 15px;"><?php echo e($row['trainee_name']); ?></td>
+                            <td style="padding: 15px; color: #334155;"><?php echo e($row['department'] ?? '-'); ?></td>
+                            <td style="padding: 15px; color: #334155;"><?php echo e($row['batch_number'] ?? '-'); ?></td>
+                            <td style="padding: 15px; color: #475569; font-weight: 600;"><?php echo e($row['module_name'] ?? 'Unassigned'); ?></td>
+                            <td style="text-align: center; padding: 15px;">
+                                <span style="background: #F1F5F9; color: #475569; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">
+                                    <?php echo $row['module_status'] ? str_replace('_', ' ', $row['module_status']) : 'N/A'; ?>
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: 800; color: #10B981; padding: 15px;"><?php echo $row['max_score'] !== null ? $row['max_score'].'%' : '-'; ?></td>
+                            <td style="padding: 15px; color: #64748B;"><?php echo e($row['trainer_name'] ?? '-'); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($mis_data)): ?>
+                        <tr><td colspan="8" style="text-align: center; padding: 30px; color: #94A3B8;">No data available.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
 </div>

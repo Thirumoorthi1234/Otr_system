@@ -22,6 +22,9 @@ if (session_status() === PHP_SESSION_NONE) {
 // Global constants
 define('SITE_NAME', 'Digital OTR System');
 
+// Language support
+require_once 'language.php';
+
 // Dynamic BASE_URL detection
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];

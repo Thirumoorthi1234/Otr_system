@@ -130,7 +130,7 @@ if (!$scores) {
     </div>
 
     <div class="footer">
-        <span>Page 6 of 7</span>
+        <span>Page 7 of 8</span>
         <span>SST3001FRM2097/D</span>
     </div>
 </div>

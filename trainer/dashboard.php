@@ -62,6 +62,13 @@ renderHeader('Trainer Dashboard');
 renderSidebar('trainer');
 ?>
 
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px;">
+    <h2 style="margin: 0; color: var(--brand-navy); font-weight: 800; font-size: 1.8rem;">Trainer Dashboard</h2>
+    <a href="export_mis.php" class="btn" style="background: #10B981; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">
+        <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Download MIS Data
+    </a>
+</div>
+
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">My Trainees</div>

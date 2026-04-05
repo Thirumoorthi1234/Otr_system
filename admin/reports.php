@@ -13,6 +13,45 @@ $stats = [
     'feedback' => $pdo->query("SELECT rating_overall, COUNT(*) as c FROM feedback GROUP BY rating_overall")->fetchAll(PDO::FETCH_KEY_PAIR)
 ];
 
+// Handle CSV download (MUST BE BEFORE ANY HTML OUTPUT)
+if ($report_type == 'mis' && isset($_GET['download_csv'])) {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=OTR_MIS_Export_' . date('Ymd_His') . '.csv');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['Emp ID','Full Name','Department','Batch','Role','DOJ','Qualification','Mobile','Module','Module Status','Exam Score','Exam Result','Induction Done','Induction Total','OJT Stages','Refresher Due','Refresher Status']);
+    $misRows = $pdo->query("
+        SELECT u.employee_id, u.full_name, u.department, u.batch_number, u.role, u.doj, u.qualification,
+               u.mobile_number,
+               m.title as module_name, a.status as assign_status,
+               (SELECT score FROM exam_results er2 JOIN exams e2 ON er2.exam_id = e2.id WHERE er2.trainee_id = u.id AND e2.module_id = a.module_id ORDER BY er2.id DESC LIMIT 1) as exam_score,
+               (SELECT status FROM exam_results er2 JOIN exams e2 ON er2.exam_id = e2.id WHERE er2.trainee_id = u.id AND e2.module_id = a.module_id ORDER BY er2.id DESC LIMIT 1) as exam_result,
+               (SELECT COUNT(*) FROM trainee_checklist_progress tcp WHERE tcp.trainee_id = u.id) as ind_done,
+               (SELECT COUNT(*) FROM induction_checklist) as ind_total,
+               (SELECT COUNT(*) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type='otj') as otj_count,
+               rt.due_date as refresher_due, rt.status as refresher_status
+        FROM users u
+        LEFT JOIN assignments a ON a.trainee_id = u.id
+        LEFT JOIN training_modules m ON a.module_id = m.id
+        LEFT JOIN refresher_training rt ON rt.trainee_id = u.id AND rt.status != 'completed'
+        WHERE u.role = 'trainee' AND u.status = 'active'
+        ORDER BY u.full_name, m.title
+    ")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($misRows as $r) {
+        fputcsv($out, [
+            $r['employee_id'], $r['full_name'], $r['department'] ?? '', $r['batch_number'] ?? '',
+            $r['role'], $r['doj'] ?? '', $r['qualification'] ?? '', $r['mobile_number'] ?? '',
+            $r['module_name'] ?? 'N/A', $r['assign_status'] ?? 'Not Assigned',
+            $r['exam_score'] !== null ? $r['exam_score'] . '%' : 'N/A',
+            $r['exam_result'] ?? 'N/A',
+            $r['ind_done'], $r['ind_total'],
+            $r['otj_count'] ?? 0,
+            $r['refresher_due'] ?? 'None', $r['refresher_status'] ?? 'N/A'
+        ]);
+    }
+    fclose($out);
+    exit();
+}
+
 renderHeader('System Analysis');
 renderSidebar('admin');
 ?>
@@ -25,164 +64,172 @@ renderSidebar('admin');
     .dashboard-container {
         font-family: 'Plus Jakarta Sans', sans-serif;
         background: #ffffff;
-        padding: 40px;
-        border-radius: 24px;
+        padding: 20px;
+        border-radius: 16px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.03);
         width: 100%;
-        max-width: 100%;
-        margin: 0 auto;
+        max-width: calc(100vw - 320px); 
+        margin: 0;
         position: relative;
-    }
-    .db-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 20px;
-        border-bottom: 2px solid #F1F5F9;
-        padding-bottom: 25px;
-        margin-bottom: 35px;
-    }
-    .db-title {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #0F172A;
-        letter-spacing: -0.5px;
-    }
-    .db-subtitle {
-        color: #64748B;
-        font-size: 0.95rem;
-        font-weight: 500;
-        margin-top: 5px;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
     
-    .stat-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 24px;
-        margin-bottom: 35px;
-    }
-    .rpt-stat-card {
-        background: #F8FAFC;
+    .kpi-card {
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 20px;
         border: 1px solid #E2E8F0;
-        border-radius: 20px;
-        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
-        position: relative;
-        overflow: hidden;
+        transition: all 0.2s;
     }
-    .rpt-stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 4px;
+    .kpi-card:hover {
+        border-color: #CBD5E1;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    .rpt-stat-label {
-        color: #64748B;
-        font-size: 0.85rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 12px;
-    }
-    .rpt-stat-value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #0F172A;
-        line-height: 1;
-    }
-    
-    .chart-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
-        gap: 30px;
-        margin-bottom: 40px;
-    }
-    .chart-card {
-        background: #ffffff;
-        border: 1px solid #E2E8F0;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-    }
-    .chart-title {
-        font-weight: 700;
-        color: #334155;
-        font-size: 1.1rem;
-        margin-bottom: 20px;
-    }
-    .chart-wrapper {
-        position: relative;
-        height: 240px;
-        width: 100%;
-    }
-
-    .report-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-top: 30px;
-        padding-top: 25px;
-        border-top: 2px solid #F1F5F9;
-        font-weight: 600;
-        color: #94A3B8;
-        font-size: 0.9rem;
-    }
-    
-    .powered-by-logo {
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+    .icon-blue { background: #E0F2FE; color: #0369A1; }
+    .icon-emerald { background: #DCFCE7; color: #15803D; }
+    .icon-amber { background: #FEF3C7; color: #B45309; }
+    .icon-rose { background: #FFE4E6; color: #BE123C; }
+    
+    .kpi-label {
         font-size: 0.8rem;
         color: #64748B;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
     }
-
-    .print-wrapper {
-        width: 100%;
-        background: transparent;
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
     }
-
-    /* Tab styles */
-    .premium-tabs {
-        display: flex; gap: 8px; background: #F1F5F9; padding: 6px; border-radius: 12px; flex-wrap: wrap;
+    
+    .glass-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    .premium-tabs .btn {
-        font-size: 0.85rem; font-weight: 600; padding: 8px 16px; border-radius: 8px; text-decoration: none; border: none;
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
-    .tab-active { background: #0F172A !important; color: #fff !important; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2); }
-    .tab-inactive { background: transparent !important; color: #64748B !important; }
+    
+    .chart-container { position: relative; height: 350px; width: 100%; }
+    
+    .chart-legend-custom {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #64748B;
+        font-weight: 600;
+    }
+    .legend-item .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-item .val { margin-left: auto; color: #0F172A; font-weight: 800; }
 
-    /* Employee Report Styling */
-    .employee-report-card { margin-bottom: 20px; }
-    .employee-data-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-    .employee-data-table th, .employee-data-table td { padding: 12px 15px; border-bottom: 1px solid #E2E8F0; text-align: left; }
-    .employee-data-table th { background: #F8FAFC; color: #475569; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .employee-data-table td { color: #1E293B; font-weight: 500; font-size: 0.95rem; }
-    .emp-section-heading { font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 30px 0 15px 0; border-left: 4px solid var(--primary-blue); padding-left: 12px; }
+    .db-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-premium {
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    .btn-premium.active { background: #0F172A; color: white; }
+    .btn-premium:not(.active) { background: #F1F5F9; color: #64748B; }
+    .btn-premium:hover:not(.active) { background: #E2E8F0; }
+    
+    #downloadPDFBtn { background: linear-gradient(135deg, #0F172A, #334155); color: white; border: none; }
+    #downloadPDFBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
 
-    .report-nav-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+    .employee-data-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-bottom: 25px; 
+    }
+    .employee-data-table th, .employee-data-table td { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; text-align: left; }
+    .employee-data-table th { background: #F8FAFC; color: #64748B; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+    .employee-data-table td { color: #1E293B; font-weight: 500; font-size: 0.9rem; }
 
-    @media (max-width: 1100px) {
-        .dashboard-container { padding: 25px; }
-        .db-header { flex-direction: column; align-items: flex-start; text-align: left !important; }
-        .db-header div { text-align: left !important; }
-        .report-nav-group { flex-direction: column; align-items: stretch; }
+    @media (max-width: 480px) {
+        .stat-grid { grid-template-columns: 1fr !important; }
         .premium-tabs { justify-content: center; }
     }
 
+    /* Grid Utilities for Professional Layout */
+    .row { display: flex; flex-wrap: wrap; margin-right: -12px; margin-left: -12px; }
+    .g-4 { padding: 12px; }
+    .col-md-3 { flex: 0 0 25%; max-width: 25%; padding: 12px; box-sizing: border-box; }
+    .col-md-4 { flex: 0 0 33.333%; max-width: 33.333%; padding: 12px; box-sizing: border-box; }
+    .col-md-5 { flex: 0 0 41.666%; max-width: 41.666%; padding: 12px; box-sizing: border-box; }
+    .col-md-7 { flex: 0 0 58.333%; max-width: 58.333%; padding: 12px; box-sizing: border-box; }
+    .mt-4 { margin-top: 1.5rem !important; }
+    .mt-1 { margin-top: 0.25rem !important; }
+    .h-100 { height: 100% !important; }
+
+    @media (max-width: 992px) {
+        .col-md-3, .col-md-4, .col-md-5, .col-md-7 { flex: 0 0 50%; max-width: 50%; }
+    }
+    @media (max-width: 600px) {
+        .col-md-3, .col-md-4, .col-md-5, .col-md-7 { flex: 0 0 100%; max-width: 100%; }
+    }
+
+    @media (max-width: 1366px) {
+        .dashboard-container { max-width: calc(100vw - 310px) !important; }
+    }
+    @media (max-width: 1100px) {
+        .dashboard-container { max-width: 100% !important; padding: 15px; }
+        .db-header { flex-direction: column; align-items: flex-start; text-align: left !important; }
+        .db-header div { text-align: left !important; }
+        .report-nav-group { flex-direction: column; align-items: stretch; }
+        .premium-tabs { justify-content: flex-start; }
+    }
+
     @media (max-width: 768px) {
-        .dashboard-container { padding: 12px !important; margin: 0 !important; border-radius: 12px; max-width: 100vw !important; box-sizing: border-box; }
-        .db-title { font-size: 1.3rem; }
-        .db-header { margin-bottom: 20px; padding-bottom: 15px; }
-        .chart-grid { grid-template-columns: 1fr !important; gap: 20px; }
+        .stat-grid { grid-template-columns: 1fr 1fr !important; }
+        .dashboard-container { padding: 15px !important; margin: 0 !important; border-radius: 12px; max-width: 100vw !important; box-sizing: border-box; }
+        .db-title { font-size: 1.2rem; }
+        .db-header { margin-bottom: 15px; padding-bottom: 10px; }
+        .chart-grid { grid-template-columns: 1fr !important; gap: 15px; }
         .employee-data-table { display: block; overflow-x: auto; white-space: nowrap; }
         .rpt-stat-card, .chart-card { padding: 12px !important; min-width: 0 !important; overflow: hidden !important; }
         .chart-wrapper { height: 260px !important; }
+        .header-actions { justify-content: space-between; width: 100%; }
     }
 
     /* PDF Export Helper Styles */
@@ -219,13 +266,19 @@ renderSidebar('admin');
     .pdf-export-mode-portrait .chart-grid {
         grid-template-columns: 1fr !important;
     }
-    /* Print Mode Styles */
+    /* Professional Print Scaling */
     @media print {
-        .sidebar, .header, .footer, .report-nav-group, .btn-preview-close { display: none !important; }
-        .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
-        .dashboard-container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; }
-        .chart-card, .rpt-stat-card, .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #E2E8F0 !important; }
-        body { background: white !important; }
+        @page { size: landscape; margin: 0.5cm; }
+        .sidebar, .header, .footer, .report-nav-group, .btn-preview-close, .btn, .db-header .btn { display: none !important; }
+        .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; border: none !important; }
+        .dashboard-container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; width: 100% !important; }
+        .rpt-stat-card, .chart-card, .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #E2E8F0 !important; }
+        body { background: white !important; font-size: 10pt !important; }
+        .db-title { font-size: 16pt !important; }
+        .db-subtitle { font-size: 10pt !important; }
+        .employee-data-table { display: table !important; width: 100% !important; font-size: 8pt !important; table-layout: auto !important; }
+        .employee-data-table th, .employee-data-table td { white-space: normal !important; word-break: break-word !important; padding: 6px !important; }
+        .stat-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
     }
 
     .preview-mode-active .sidebar, 
@@ -240,8 +293,21 @@ renderSidebar('admin');
         background: #F8FAFC !important;
     }
     .preview-mode-active .dashboard-container {
-        max-width: 1100px !important;
+        max-width: min(1100px, 96vw) !important;
         margin: 0 auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important; 
+    }
+    .preview-mode-active .employee-data-table {
+        display: table; /* Allow it to be a real table in preview if it fits */
+        width: 100% !important;
+    }
+    @media (max-width: 1200px) {
+        .preview-mode-active .employee-data-table {
+            display: block !important;
+            overflow-x: auto !important;
+        }
     }
     .btn-preview-close {
         display: none;
@@ -263,24 +329,39 @@ renderSidebar('admin');
     }
 </style>
 
-<div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none;">
+<div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none; max-width: 100%; overflow-x: hidden;">
     <button onclick="togglePrintPreview()" class="btn-preview-close"><i class="fas fa-times"></i> Close Preview</button>
 
-    <div class="report-nav-group">
-        <div class="premium-tabs">
-            <a href="reports.php?type=overview" class="btn <?php echo $report_type == 'overview' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-chart-pie" style="margin-right:8px;"></i> Dashboard Summary</a>
-            <a href="reports.php?type=employee" class="btn <?php echo $report_type == 'employee' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-id-badge" style="margin-right:8px;"></i> Employee Report</a>
-            <a href="reports.php?type=completion" class="btn <?php echo $report_type == 'completion' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-list-check" style="margin-right:8px;"></i> Completion List</a>
-            <a href="reports.php?type=performance" class="btn <?php echo $report_type == 'performance' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-graduation-cap" style="margin-right:8px;"></i> Performance Log</a>
-            <a href="reports.php?type=feedback" class="btn <?php echo $report_type == 'feedback' ? 'tab-active' : 'tab-inactive'; ?>"><i class="fas fa-comment-dots" style="margin-right:8px;"></i> Feedback</a>
+    <div class="db-actions-suite" style="margin-bottom: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                <a href="?type=overview" style="text-decoration:none; color:<?php echo $report_type=='overview'?'#0F172A':'#64748B'; ?>; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-chart-pie"></i> <?php echo __('Dashboard Summary'); ?>
+                </a>
+                <a href="?type=employee" style="text-decoration:none; color:<?php echo $report_type=='employee'?'#0F172A':'#64748B'; ?>; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-address-card"></i> <?php echo __('Employee Report'); ?>
+                </a>
+                <a href="?type=completion" style="text-decoration:none; color:<?php echo $report_type=='completion'?'#0F172A':'#64748B'; ?>; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-list-check"></i> <?php echo __('Completion List'); ?>
+                </a>
+                <a href="?type=performance" style="text-decoration:none; color:<?php echo $report_type=='performance'?'#0F172A':'#64748B'; ?>; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-graduation-cap"></i> <?php echo __('Performance Log'); ?>
+                </a>
+                <a href="?type=feedback" style="text-decoration:none; color:<?php echo $report_type=='feedback'?'#0F172A':'#64748B'; ?>; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-comment-dots"></i> <?php echo __('Feedback'); ?>
+                </a>
+            </div>
+            <a href="?type=mis" class="btn" style="background: #10B981; color: white; padding: 10px 24px; border-radius: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                <i class="fa-solid fa-download"></i> <?php echo __('MIS Export'); ?>
+            </a>
         </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button onclick="togglePrintPreview()" class="btn" style="background: white; color: #0F172A; padding: 10px 24px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 2px solid #E2E8F0; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-eye"></i> Preview & Print
+        <div style="display: flex; gap: 15px;">
+            <button onclick="togglePrintPreview()" class="btn" style="background: white; color: #0F172A; border: 1px solid #E2E8F0; padding: 12px 30px; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <i class="fa-solid fa-eye"></i> <?php echo __('Preview & Print'); ?>
             </button>
-            <button onclick="exportReport()" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 24px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25); border: none; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-file-pdf"></i> Generate PDF
+            <button onclick="downloadPDF()" class="btn" style="background: #1E293B; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
+                <i class="fa-solid fa-file-pdf"></i> <?php echo __('Generate PDF'); ?>
             </button>
         </div>
     </div>
@@ -291,48 +372,75 @@ renderSidebar('admin');
         <?php if ($report_type == 'overview'): ?>
         <!-- VISUAL DASHBOARD -->
         <div class="dashboard-container">
-            <div class="db-header">
-                <div>
-                    <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" style="height: 35px; margin-bottom: 10px;" onerror="this.style.display='none';">
-                    <div class="db-title">Executive Summary</div>
-                    <div class="db-subtitle">Training Analytics & Performance Metrics</div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 700; color: #0EA5E9; font-size: 1.2rem;"><?php echo date('F d, Y'); ?></div>
-                    <div style="color: #64748B; font-weight: 600; font-size: 0.9rem; margin-top: 4px;">System Generated Report</div>
+            <div class="row g-4">
+            <!-- High Level KPI Cards -->
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                    <div class="kpi-label"><?php echo __('Total Active Trainees'); ?></div>
+                    <div class="kpi-value"><?php echo number_format($pdo->query("SELECT COUNT(*) FROM users WHERE role='trainee' AND status='active'")->fetchColumn()); ?></div>
                 </div>
             </div>
-
-            <div class="stat-grid">
-                <div class="rpt-stat-card" style="border-top: 4px solid #3B82F6;">
-                    <div class="rpt-stat-label">Total Assessments</div>
-                    <div class="rpt-stat-value"><?php echo number_format($stats['scores']['total'] ?? 0); ?></div>
-                </div>
-                <div class="rpt-stat-card" style="border-top: 4px solid #8B5CF6;">
-                    <div class="rpt-stat-label">Average Global Score</div>
-                    <div class="rpt-stat-value" style="color: #8B5CF6;"><?php echo number_format(round($stats['scores']['avg'] ?? 0, 1), 1); ?>%</div>
-                </div>
-                <div class="rpt-stat-card" style="border-top: 4px solid #10B981;">
-                    <div class="rpt-stat-label">Completed Modules</div>
-                    <div class="rpt-stat-value" style="color: #10B981;"><?php echo number_format($stats['completion']['completed'] ?? 0); ?></div>
-                </div>
-                <div class="rpt-stat-card" style="border-top: 4px solid #F59E0B;">
-                    <div class="rpt-stat-label">In-Progress Modules</div>
-                    <div class="rpt-stat-value" style="color: #F59E0B;"><?php echo number_format($stats['completion']['in_progress'] ?? 0); ?></div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-emerald"><i class="fa-solid fa-check-double"></i></div>
+                    <div class="kpi-label"><?php echo __('Training Completion Rate'); ?></div>
+                    <div class="kpi-value">
+                        <?php 
+                            $total = array_sum($stats['completion']);
+                            $comp = $stats['completion']['completed'] ?? 0;
+                            echo $total > 0 ? round(($comp / $total) * 100, 1) . '%' : '0%';
+                        ?>
+                    </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-amber"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="kpi-label"><?php echo __('Average Exam Score'); ?></div>
+                    <div class="kpi-value"><?php echo round($stats['scores']['avg'] ?? 0, 1); ?>%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="kpi-label"><?php echo __('Active Blocked Users'); ?></div>
+                    <div class="kpi-value"><?php echo number_format($pdo->query("SELECT COUNT(*) FROM users WHERE status='inactive'")->fetchColumn()); ?></div>
+                </div>
+            </div>
+        </div>
 
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <div class="chart-title"><i class="fas fa-chart-line" style="color: #3B82F6; margin-right: 8px;"></i> Top Performing Modules</div>
-                    <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
+        <div class="row g-4 mt-1">
+            <div class="col-md-7">
+                <div class="glass-card h-100">
+                    <h3 class="card-title"><?php echo __('Module Popularity & Success Distribution'); ?></h3>
+                    <div style="height: 350px;">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="glass-card h-100">
+                    <h3 class="card-title"><?php echo __('Completion Status Breakdown'); ?></h3>
+                    <div style="height: 250px; display: flex; justify-content: center;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                    <div class="chart-legend-custom mt-4">
+                        <?php foreach($stats['completion'] as $status => $count): ?>
+                            <div class="legend-item">
+                                <span class="dot" style="background: <?php echo $status=='completed'?'#10B981':($status=='in_progress'?'#F59E0B':'#64748B'); ?>"></span>
+                                <span class="lbl"><?php echo ucfirst(str_replace('_', ' ', $status)); ?></span>
+                                <span class="val"><?php echo $count; ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-title"><i class="fas fa-chart-pie" style="color: #10B981; margin-right: 8px;"></i> Completion Distribution</div>
-                    <div class="chart-wrapper" style="height: 220px; display: flex; justify-content: center;"><canvas id="donutChart"></canvas></div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-title"><i class="fas fa-star" style="color: #F59E0B; margin-right: 8px;"></i> Feedback Sentiment Breakdown</div>
+                    <div class="chart-title"><i class="fas fa-star" style="color: #F59E0B; margin-right: 8px;"></i> <?php echo __('Feedback Sentiment Breakdown'); ?></div>
                     <div class="chart-wrapper" style="height: 220px; display: flex; justify-content: center;"><canvas id="pieChart"></canvas></div>
                 </div>
                 <div class="chart-card">
@@ -759,6 +867,143 @@ renderSidebar('admin');
                 </div>
             </div>
         </div>
+        <?php elseif ($report_type == 'mis'): ?>
+        <!-- ─── MIS DATA EXPORT ─── -->
+        <?php
+        // Fetch summary stats
+        $mis_trainees = $pdo->query("SELECT COUNT(*) FROM users WHERE role='trainee' AND status='active'")->fetchColumn();
+        $mis_completed = $pdo->query("SELECT COUNT(*) FROM assignments WHERE status='completed'")->fetchColumn();
+        $mis_overdue  = $pdo->query("SELECT COUNT(*) FROM refresher_training WHERE status='overdue'")->fetchColumn();
+        $mis_avg = $pdo->query("SELECT ROUND(AVG(score)) FROM exam_results")->fetchColumn();
+        ?>
+        <div class="dashboard-container">
+            <div class="db-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="flex: 1; min-width: 250px;">
+                    <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" style="height: 30px; margin-bottom: 8px;" onerror="this.style.display='none';">
+                    <div class="db-title" style="font-size: 1.3rem;"><?php echo __('MIS Data Export'); ?></div>
+                    <div class="db-subtitle" style="font-size: 0.85rem;"><?php echo __('Management Information System — Complete Trainee Data'); ?></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 5px;">
+                    <div style="font-weight:700; color:#0EA5E9; font-size:0.9rem;"><?php echo date('F d, Y'); ?></div>
+                    <a href="?type=mis&download_csv=1" class="btn" style="background: linear-gradient(135deg, #059669, #10B981); color:#fff; padding: 10px 18px; font-weight:800; border-radius:10px; font-size:0.82rem; display:inline-flex; align-items:center; gap:8px; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-file-csv" style="font-size: 1rem;"></i> <?php echo __('Download CSV'); ?>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick stats -->
+            <div class="row g-4" style="margin-bottom:30px;">
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                        <div class="kpi-label"><?php echo __('Active Trainees'); ?></div>
+                        <div class="kpi-value"><?php echo $mis_trainees; ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-emerald"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div class="kpi-label"><?php echo __('Completed Modules'); ?></div>
+                        <div class="kpi-value" style="color:#10B981;"><?php echo $mis_completed; ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-amber"><i class="fa-solid fa-star"></i></div>
+                        <div class="kpi-label"><?php echo __('Avg Exam Score'); ?></div>
+                        <div class="kpi-value" style="color:#F59E0B;"><?php echo $mis_avg ?: 0; ?>%</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-rose"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="kpi-label"><?php echo __('Overdue Refreshers'); ?></div>
+                        <div class="kpi-value" style="color:#EF4444;"><?php echo $mis_overdue; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIS Table Preview -->
+            <?php
+            $misPreview = $pdo->query("
+                SELECT u.employee_id, u.full_name, u.department, u.batch_number, u.doj,
+                       m.title as module_name, a.status as assign_status,
+                       (SELECT er2.score FROM exam_results er2 JOIN exams e2 ON er2.exam_id = e2.id WHERE er2.trainee_id = u.id AND e2.module_id = a.module_id ORDER BY er2.id DESC LIMIT 1) as exam_score,
+                       (SELECT er2.status FROM exam_results er2 JOIN exams e2 ON er2.exam_id = e2.id WHERE er2.trainee_id = u.id AND e2.module_id = a.module_id ORDER BY er2.id DESC LIMIT 1) as exam_result,
+                       (SELECT COUNT(*) FROM trainee_checklist_progress tcp WHERE tcp.trainee_id = u.id) as ind_done,
+                       (SELECT COUNT(*) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type='otj') as otj_count,
+                       rt.due_date as refresher_due, rt.status as refresher_status
+                FROM users u
+                LEFT JOIN assignments a ON a.trainee_id = u.id
+                LEFT JOIN training_modules m ON a.module_id = m.id
+                LEFT JOIN refresher_training rt ON rt.trainee_id = u.id AND rt.status != 'completed'
+                WHERE u.role='trainee' AND u.status='active'
+                ORDER BY u.full_name
+                LIMIT 50
+            ")->fetchAll(PDO::FETCH_ASSOC);
+            ?>
+            <table class="employee-data-table" id="misTable">
+                <thead>
+                    <tr>
+                        <th>Emp ID</th>
+                        <th>Name</th>
+                        <th>Dept</th>
+                        <th>Batch</th>
+                        <th>Module</th>
+                        <th>Status</th>
+                        <th>Exam</th>
+                        <th>Induction</th>
+                        <th>OJT Stages</th>
+                        <th>Refresher</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($misPreview as $r):
+                    $sc = $r['assign_status'] === 'completed' ? '#10b981' : ($r['assign_status'] === 'in_progress' ? '#f59e0b' : '#94a3b8');
+                    $ec = $r['exam_result'] === 'pass' ? '#10b981' : ($r['exam_result'] === 'fail' ? '#ef4444' : '#94a3b8');
+                ?>
+                <tr>
+                    <td style="font-weight:700; font-size:0.82rem;"><?php echo e($r['employee_id']); ?></td>
+                    <td style="font-weight:700; color:#0f172a;"><?php echo e($r['full_name']); ?></td>
+                    <td style="font-size:0.82rem;"><?php echo e($r['department'] ?? '-'); ?></td>
+                    <td style="font-size:0.82rem;"><?php echo e($r['batch_number'] ?? '-'); ?></td>
+                    <td style="font-size:0.82rem;"><?php echo e($r['module_name'] ?? 'N/A'); ?></td>
+                    <td><span style="background:<?php echo $sc; ?>20; color:<?php echo $sc; ?>; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.72rem;"><?php echo strtoupper(str_replace('_',' ',$r['assign_status'] ?? 'N/A')); ?></span></td>
+                    <td>
+                        <?php if ($r['exam_score'] !== null): ?>
+                        <span style="color:<?php echo $ec; ?>; font-weight:800;"><?php echo $r['exam_score']; ?>% <span style="font-size:0.7rem;">(<?php echo strtoupper($r['exam_result']); ?>)</span></span>
+                        <?php else: ?><span style="color:#94a3b8; font-size:0.8rem;">N/A</span><?php endif; ?>
+                    </td>
+                    <td style="font-size:0.85rem;"><?php echo $r['ind_done']; ?> topics</td>
+                    <td style="font-size:0.85rem; text-align:center;"><?php echo $r['otj_count'] ?? 0; ?></td>
+                    <td style="font-size:0.8rem;">
+                        <?php if ($r['refresher_due']): ?>
+                        <span style="background:<?php echo $r['refresher_status']==='overdue'?'#fef2f2':'#fefce8'; ?>; color:<?php echo $r['refresher_status']==='overdue'?'#dc2626':'#d97706'; ?>; padding:2px 8px; border-radius:5px; font-weight:700; font-size:0.72rem;">
+                            <?php echo date('d M Y', strtotime($r['refresher_due'])); ?>
+                            <?php echo $r['refresher_status']==='overdue'?' ⚠️':''; ?>
+                        </span>
+                        <?php else: ?><span style="color:#94a3b8;">—</span><?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php if (empty($misPreview)): ?>
+                <tr><td colspan="10" style="text-align:center; color:#94a3b8; padding:30px;">No trainee data found.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
+            <?php if (count($misPreview) >= 50): ?>
+            <div style="text-align:center; margin-top:15px; color:#64748b; font-size:0.85rem; font-weight:600;">
+                <i class="fas fa-info-circle"></i> Showing first 50 records. Download CSV for complete data.
+            </div>
+            <?php endif; ?>
+
+            <div class="report-footer" style="margin-top:30px;">
+                <div>Confidential - Internal Use Only</div>
+                <div class="powered-by-logo">
+                    Powered By <img src="<?php echo BASE_URL; ?>assets/img/profiles/powered_by.svg" alt="Learnlike" style="height:22px;">
+                </div>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 </div>
@@ -784,7 +1029,7 @@ function togglePrintPreview() {
         });
     }
 }
-function exportReport() {
+function downloadPDF() {
     const element = document.getElementById('report-content');
     const container = element.querySelector('.dashboard-container');
     const sidebar = document.querySelector('.sidebar');

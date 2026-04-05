@@ -107,10 +107,68 @@ renderSidebar('trainee');
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px; margin-bottom: 40px;">
                 <a href="dashboard.php" class="btn btn-dashboard">Dashboard</a>
                 <a href="feedback.php?exam_id=<?php echo $result['id']; ?>" class="btn btn-primary">Submit Feedback</a>
             </div>
+
+            <?php
+            // Fetch Detailed Answers for Passed Exam View
+            try {
+                if (!isset($answers)) {
+                    $stmt_ans = $pdo->prepare("
+                        SELECT a.trainee_answer, a.is_correct, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option 
+                        FROM exam_result_answers a 
+                        JOIN questions q ON a.question_id = q.id 
+                        WHERE a.result_id = ?
+                    ");
+                    $stmt_ans->execute([$result_id]);
+                    $answers = $stmt_ans->fetchAll();
+                }
+            } catch(Exception $e) { $answers = []; }
+            
+            if (!empty($answers)):
+            ?>
+            <div style="text-align: left; max-width: 800px; margin: 0 auto 40px; background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="color: var(--brand-navy); font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+                    <i class="fas fa-clipboard-check"></i> Answer Review
+                </h3>
+                
+                <?php foreach ($answers as $index => $ans): 
+                    $is_corr = (bool)$ans['is_correct'];
+                    $bg = $is_corr ? '#f0fdf4' : '#fef2f2';
+                    $border = $is_corr ? '#bbf7d0' : '#fecaca';
+                    $iconUrl = $is_corr ? '<i class="fas fa-check-circle" style="color: #22c55e;"></i>' : '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+                    
+                    $map = ['a'=>$ans['option_a'], 'b'=>$ans['option_b'], 'c'=>$ans['option_c'], 'd'=>$ans['option_d']];
+                    $given = $ans['trainee_answer'] ? ($map[$ans['trainee_answer']] ?? $ans['trainee_answer']) : '<span style="color:#94a3b8; font-style:italic;">Not Answered</span>';
+                    $correct = $map[$ans['correct_option']] ?? $ans['correct_option'];
+                ?>
+                <div style="background: <?php echo $bg; ?>; border: 1px solid <?php echo $border; ?>; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="font-size: 1.5rem; margin-top: 2px;">
+                            <?php echo $iconUrl; ?>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 10px; font-size: 1.1rem; color: #1e293b;"><?php echo ($index + 1) . ". " . e($ans['question_text']); ?></h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.95rem;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <div style="font-weight: 700; color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Your Answer</div>
+                                    <div style="color: <?php echo $is_corr ? '#166534' : '#991b1b'; ?>; font-weight: 600;"><?php echo $given; ?></div>
+                                </div>
+                                <?php if (!$is_corr): ?>
+                                <div style="flex: 1; min-width: 200px;">
+                                    <div style="font-weight: 700; color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Correct Answer</div>
+                                    <div style="color: #166534; font-weight: 600;"><?php echo e($correct); ?></div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
             
             <script>
             function downloadCertificate() {
@@ -166,10 +224,66 @@ renderSidebar('trainee');
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 15px; justify-content: center;">
+                <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 40px;">
                     <a href="dashboard.php" class="btn btn-dashboard">Dashboard</a>
                     <a href="exam.php?id=<?php echo $result['exam_id']; ?>" class="btn btn-primary">Retry Exam</a>
                 </div>
+
+                <?php
+                // Fetch Detailed Answers
+                try {
+                    $stmt_ans = $pdo->prepare("
+                        SELECT a.trainee_answer, a.is_correct, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option 
+                        FROM exam_result_answers a 
+                        JOIN questions q ON a.question_id = q.id 
+                        WHERE a.result_id = ?
+                    ");
+                    $stmt_ans->execute([$result_id]);
+                    $answers = $stmt_ans->fetchAll();
+                } catch(Exception $e) { $answers = []; }
+                
+                if (!empty($answers)):
+                ?>
+                <div style="text-align: left; max-width: 800px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                    <h3 style="color: var(--brand-navy); font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+                        <i class="fas fa-clipboard-check"></i> Answer Review
+                    </h3>
+                    
+                    <?php foreach ($answers as $index => $ans): 
+                        $is_corr = (bool)$ans['is_correct'];
+                        $bg = $is_corr ? '#f0fdf4' : '#fef2f2';
+                        $border = $is_corr ? '#bbf7d0' : '#fecaca';
+                        $iconUrl = $is_corr ? '<i class="fas fa-check-circle" style="color: #22c55e;"></i>' : '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+                        
+                        $map = ['a'=>$ans['option_a'], 'b'=>$ans['option_b'], 'c'=>$ans['option_c'], 'd'=>$ans['option_d']];
+                        $given = $ans['trainee_answer'] ? ($map[$ans['trainee_answer']] ?? $ans['trainee_answer']) : '<span style="color:#94a3b8; font-style:italic;">Not Answered</span>';
+                        $correct = $map[$ans['correct_option']] ?? $ans['correct_option'];
+                    ?>
+                    <div style="background: <?php echo $bg; ?>; border: 1px solid <?php echo $border; ?>; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <div style="font-size: 1.5rem; margin-top: 2px;">
+                                <?php echo $iconUrl; ?>
+                            </div>
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 10px; font-size: 1.1rem; color: #1e293b;"><?php echo ($index + 1) . ". " . e($ans['question_text']); ?></h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.95rem;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <div style="font-weight: 700; color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Your Answer</div>
+                                        <div style="color: <?php echo $is_corr ? '#166534' : '#991b1b'; ?>; font-weight: 600;"><?php echo $given; ?></div>
+                                    </div>
+                                    <?php if (!$is_corr): ?>
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <div style="font-weight: 700; color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Correct Answer</div>
+                                        <div style="color: #166534; font-weight: 600;"><?php echo e($correct); ?></div>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     <?php else: ?>

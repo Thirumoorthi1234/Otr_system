@@ -41,6 +41,20 @@ $stmt = $pdo->prepare("INSERT INTO exam_results (trainee_id, exam_id, score, max
 $stmt->execute([$trainee_id, $exam_id, $score, $status]);
 $result_id = $pdo->lastInsertId();
 
+// ── Feature 8: Save per-question answers ────────────────────────────────────
+try {
+    $ansStmt = $pdo->prepare("INSERT INTO exam_result_answers (result_id, question_id, trainee_answer, is_correct) VALUES (?, ?, ?, ?)");
+    foreach ($questions as $q) {
+        $trainee_answer = $_POST['q' . $q['id']] ?? null;
+        $is_correct     = ($trainee_answer !== null && $trainee_answer === $q['correct_option']) ? 1 : 0;
+        $ansStmt->execute([$result_id, $q['id'], $trainee_answer, $is_correct]);
+    }
+} catch (Exception $e) {
+    // Table may not exist yet — non-critical; migration needed
+    error_log('exam_result_answers insert failed: ' . $e->getMessage());
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 // Get Module ID for this exam
 $stmt = $pdo->prepare("SELECT module_id FROM exams WHERE id = ?");
 $stmt->execute([$exam_id]);

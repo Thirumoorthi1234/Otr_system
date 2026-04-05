@@ -263,7 +263,7 @@ $checklist = $stmt->fetchAll();
 
     <div class="footer-info">
         <span>SST3001FRM2097/D</span>
-        <span>Page 1 of 7</span>
+        <span>Page 1 of 8</span>
     </div>
 </div>
 

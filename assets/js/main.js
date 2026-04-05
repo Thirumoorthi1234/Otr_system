@@ -70,6 +70,10 @@ function toggleProfileMenu() {
     if (!trigger || !menu) return;
     trigger.classList.toggle('open');
     menu.classList.toggle('open');
+    if (menu.classList.contains('open')) {
+        document.getElementById('notifMenu')?.classList.remove('open');
+        document.getElementById('langMenu')?.classList.remove('open');
+    }
 }
 
 // ── Notification Dropdown ─────────────────────────────────
@@ -77,7 +81,21 @@ function toggleNotifMenu() {
     const menu = document.getElementById('notifMenu');
     if (!menu) return;
     menu.classList.toggle('open');
-    if (menu.classList.contains('open')) loadNotifications();
+    if (menu.classList.contains('open')) {
+        loadNotifications();
+        document.getElementById('langMenu')?.classList.remove('open');
+        document.getElementById('profileMenu')?.classList.remove('open');
+    }
+}
+
+function toggleLangMenu() {
+    const menu = document.getElementById('langMenu');
+    if (!menu) return;
+    menu.classList.toggle('open');
+    if (menu.classList.contains('open')) {
+        document.getElementById('notifMenu')?.classList.remove('open');
+        document.getElementById('profileMenu')?.classList.remove('open');
+    }
 }
 
 async function loadNotifications() {
@@ -179,8 +197,15 @@ document.addEventListener('click', function(e) {
     }
     // Notification dropdown
     const ndWrap = document.querySelector('.notif-dropdown-wrap');
+    const langWrap = document.getElementById('langMenu')?.closest('.notif-dropdown-wrap');
+    
     if (ndWrap && !ndWrap.contains(e.target)) {
-        document.getElementById('notifMenu')?.classList.remove('open');
+        if (!e.target.closest('#langMenu') && !e.target.closest('button[onclick="toggleLangMenu()"]')) {
+            document.getElementById('notifMenu')?.classList.remove('open');
+        }
+    }
+    if (langWrap && !langWrap.contains(e.target)) {
+        document.getElementById('langMenu')?.classList.remove('open');
     }
 });
 
@@ -223,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 var dt = table.DataTable({
                     pageLength: 10,
                     responsive: true,
-                    language: {
+                    language: window.I18N || {
                         search: "Search:",
                         lengthMenu: "_MENU_ entries per page"
                     },

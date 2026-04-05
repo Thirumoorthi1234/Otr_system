@@ -145,7 +145,7 @@ $recert_stages = $stmt->fetchAll();
     </div>
 
     <div class="footer">
-        <span>Page 4 of 7</span>
+        <span>Page 4 of 8</span>
     </div>
 </div>
 

@@ -15,7 +15,7 @@ $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM exam_results WHERE trainee_
 $stmt->execute([$trainee_id]);
 $totalExams = $stmt->fetch()['count'];
 
-renderHeader('Trainee Dashboard');
+renderHeader(__('trainee_dashboard'));
 renderSidebar('trainee');
 ?>
 
@@ -86,23 +86,23 @@ renderSidebar('trainee');
 
     <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-label">Pending Modules</div>
+        <div class="stat-label"><?php echo __('pending_modules'); ?></div>
         <div class="stat-value"><?php echo $pendingModules; ?></div>
-        <div class="stat-trend" style="color: var(--warning); font-size: 0.8rem;">To be completed</div>
+        <div class="stat-trend" style="color: var(--warning); font-size: 0.8rem;"><?php echo __('to_be_completed'); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Tests Taken</div>
+        <div class="stat-label"><?php echo __('tests_taken'); ?></div>
         <div class="stat-value"><?php echo $totalExams; ?></div>
-        <div class="stat-trend" style="color: var(--primary-blue); font-size: 0.8rem;">Knowledge check</div>
+        <div class="stat-trend" style="color: var(--primary-blue); font-size: 0.8rem;"><?php echo __('knowledge_check'); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Average Score</div>
+        <div class="stat-label"><?php echo __('average_score'); ?></div>
         <div class="stat-value">85%</div>
-        <div class="stat-trend" style="color: var(--success); font-size: 0.8rem;">Performance</div>
+        <div class="stat-trend" style="color: var(--success); font-size: 0.8rem;"><?php echo __('performance'); ?></div>
     </div>
     <?php if (!empty($_SESSION['batch_number'])): ?>
     <div class="stat-card">
-        <div class="stat-label">Batch Number</div>
+        <div class="stat-label"><?php echo __('batch_number'); ?></div>
         <div class="stat-value" style="font-size: 1.6rem;"><?php echo e($_SESSION['batch_number']); ?></div>
         <div class="stat-trend" style="color: var(--primary-blue); font-size: 0.8rem;"><i class="fas fa-layer-group"></i> Assigned batch</div>
     </div>
@@ -110,15 +110,15 @@ renderSidebar('trainee');
 </div>
 
 <div class="card">
-    <h3 style="margin-bottom: 20px;">Available Assessments</h3>
+    <h3 style="margin-bottom: 20px;"><?php echo __('available_assessments'); ?></h3>
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Exam Name</th>
-                    <th>Related Module</th>
-                    <th>Duration</th>
-                    <th>Action</th>
+                    <th><?php echo __('exam_name'); ?></th>
+                    <th><?php echo __('related_module'); ?></th>
+                    <th><?php echo __('duration'); ?></th>
+                    <th><?php echo __('action'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -139,7 +139,7 @@ renderSidebar('trainee');
                     <td><?php echo e($e['module_name']); ?></td>
                     <td><?php echo e($e['duration_minutes']); ?> min</td>
                     <td>
-                        <a href="exam.php?id=<?php echo $e['id']; ?>" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;">Start Exam</a>
+                        <a href="exam.php?id=<?php echo $e['id']; ?>" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;"><?php echo __('start_exam'); ?></a>
                     </td>
                 </tr>
                 <?php endwhile; ?>

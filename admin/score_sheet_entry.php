@@ -57,7 +57,7 @@ renderSidebar($_SESSION['role']);
 <div class="card" style="max-width: 800px; margin: auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <h3>Record Induction Test Scores</h3>
-        <a href="induction_records.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #4A5568; color: white;">Back</a>
+        <a href="users.php" class="btn" style="background: #4A5568; color: white;">Back to Users</a>
     </div>
 
     <?php if ($message): ?>
@@ -67,7 +67,22 @@ renderSidebar($_SESSION['role']);
     <?php endif; ?>
 
     <form method="POST">
-        <input type="hidden" name="trainee_id" value="<?php echo $trainee_id; ?>">
+        <div class="form-group" style="margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <label class="form-label" style="font-weight: 700; color: #1a365d;">Select Trainee to Record Scores</label>
+            <select name="trainee_id" class="form-control" onchange="window.location.href='score_sheet_entry.php?tid=' + this.value" required>
+                <option value="">-- Choose a Trainee --</option>
+                <?php
+                $trainees = $pdo->query("SELECT id, full_name, employee_id FROM users WHERE role = 'trainee' ORDER BY full_name ASC");
+                while ($t = $trainees->fetch()) {
+                    $selected = ($trainee_id == $t['id']) ? 'selected' : '';
+                    echo "<option value='{$t['id']}' $selected>{$t['full_name']} ({$t['employee_id']})</option>";
+                }
+                ?>
+            </select>
+            <?php if (!$trainee_id): ?>
+                <p style="margin-top: 10px; font-size: 0.85rem; color: #e53e3e;"><i class="fas fa-info-circle"></i> Please select a trainee first to enter scores.</p>
+            <?php endif; ?>
+        </div>
         
         <div class="table-container">
             <table class="table">

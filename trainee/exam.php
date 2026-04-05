@@ -4,13 +4,15 @@ require_once '../includes/layout.php';
 checkRole('trainee');
 
 $exam_id = $_GET['id'] ?? null;
-if (!$exam_id) die("Exam ID required.");
+if (!$exam_id) die(__("exam_id_required"));
 
 // Fetch Exam Details
 $stmt = $pdo->prepare("SELECT * FROM exams WHERE id = ?");
 $stmt->execute([$exam_id]);
 $exam = $stmt->fetch();
-if (!$exam) die("Exam not found.");
+if (!$exam) die(__("exam_not_found"));
+
+
 
 // Check for locked assignment
 $stmt_lock = $pdo->prepare("
@@ -26,13 +28,13 @@ if ($assignment_status && $assignment_status['is_locked']) {
     die("<div style='text-align:center; padding: 100px; font-family: sans-serif;'>
             <div style='background: #fff; padding: 50px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); max-width: 500px; margin: auto;'>
                 <i class='fas fa-lock' style='font-size: 4rem; color: #ef4444; margin-bottom: 20px;'></i>
-                <h1 style='color: #ef4444; font-weight: 900;'>Exam Locked</h1>
-                <p style='color: #4a5568; line-height: 1.6;'>This exam has been locked due to proctoring violations (No face detected multiple times). Your session has been suspended.</p>
+                <h1 style='color: #ef4444; font-weight: 900;'>" . __("exam_locked") . "</h1>
+                <p style='color: #4a5568; line-height: 1.6;'>" . __("exam_locked_proctoring_desc") . "</p>
                 <div style='background: #fff5f5; border-left: 4px solid #f56565; padding: 15px; margin: 25px 0; text-align: left;'>
-                    <p style='margin:0; font-weight: 700; color: #c53030;'>Required Action:</p>
-                    <p style='margin:0; font-size: 0.9rem; color: #742a2a;'>Please contact your trainer to verify your activity and unlock this assessment.</p>
+                    <p style='margin:0; font-weight: 700; color: #c53030;'>" . __("required_action") . ":</p>
+                    <p style='margin:0; font-size: 0.9rem; color: #742a2a;'>" . __("contact_trainer_unlock_desc") . "</p>
                 </div>
-                <a href='my-training.php' style='display: block; background: var(--primary-blue); color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: 800; margin-top: 20px;'>Back to Dashboard</a>
+                <a href='my-training.php' style='display: block; background: var(--primary-blue); color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: 800; margin-top: 20px;'>" . __("back_to_dashboard") . "</a>
             </div>
          </div>");
 }
@@ -42,7 +44,7 @@ $stmt = $pdo->prepare("SELECT * FROM questions WHERE exam_id = ? ORDER BY RAND()
 $stmt->execute([$exam_id]);
 $questions = $stmt->fetchAll();
 
-renderHeader('Online Examination');
+renderHeader(__('online_examination'));
 renderSidebar('trainee');
 ?>
 
@@ -58,8 +60,8 @@ renderSidebar('trainee');
                 <div>
                     <h2 style="margin:0; color: var(--brand-navy); font-weight: 800; font-size: 1.8rem;"><?php echo e($exam['title']); ?></h2>
                     <p style="margin:5px 0 0; color: var(--text-muted); font-size: 0.95rem;">
-                        <i class="fas fa-list-check" style="margin-right: 5px;"></i> <?php echo count($questions); ?> Questions &bull; 
-                        <i class="fas fa-bullseye" style="margin-right: 5px; color: #38a169;"></i> Passing: <?php echo $exam['passing_score']; ?>%
+                        <i class="fas fa-list-check" style="margin-right: 5px;"></i> <?php echo count($questions); ?> <?php echo __('questions'); ?> &bull; 
+                        <i class="fas fa-bullseye" style="margin-right: 5px; color: #38a169;"></i> <?php echo __('Passing'); ?>: <?php echo $exam['passing_score']; ?>%
                     </p>
                 </div>
                 <div style="text-align: right;">
@@ -74,19 +76,19 @@ renderSidebar('trainee');
 
             <div style="background: #f8fafc; padding: 25px; border-radius: 20px; margin-bottom: 40px; border: 1px solid #edf2f7; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                 <div class="info-item">
-                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;">Candidate Name</span>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;"><?php echo __('candidate_name'); ?></span>
                     <p style="margin:0; font-weight: 700; color: var(--text-main); font-size: 1.1rem;"><?php echo e($_SESSION['full_name']); ?></p>
                 </div>
                 <div class="info-item">
-                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;">Employee ID</span>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;"><?php echo __('employee_id'); ?></span>
                     <p style="margin:0; font-weight: 700; color: var(--text-main); font-size: 1.1rem;"><?php echo e($_SESSION['user_id']); ?></p>
                 </div>
                 <div class="info-item">
-                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;">Department</span>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;"><?php echo __('department'); ?></span>
                     <input type="text" name="department_display" placeholder="Assigned Department" value="" required style="width: 100%; padding: 10px 15px; border-radius: 10px; border: 2px solid #e2e8f0; font-weight: 600; font-size: 1rem; margin-top: 5px;">
                 </div>
                 <div class="info-item">
-                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;">Exam Date</span>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 5px;"><?php echo __('exam_date'); ?></span>
                     <p style="margin:0; font-weight: 700; color: var(--text-main); font-size: 1.1rem;"><?php echo date('d M Y'); ?></p>
                 </div>
             </div>
@@ -95,7 +97,10 @@ renderSidebar('trainee');
                 <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
                 <input type="hidden" name="department" id="hidden-dept" value="">
 
-                <?php if ($exam['camera_enabled']): ?>
+                <?php 
+                // Camera is no longer mandatory for exam phase as per revised requirement
+                if (false && $exam['camera_enabled']): 
+                ?>
                 <!-- TOP PROCTORING & RULES DASHBOARD -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
                     <!-- Camera Unit -->
@@ -107,23 +112,23 @@ renderSidebar('trainee');
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
                                 <h4 style="margin: 0; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
-                                    <span class="live-dot"></span> PROCTORING ACTIVE
+                                    <span class="live-dot"></span> <?php echo __('proctoring_active'); ?>
                                 </h4>
                             </div>
                             <p style="font-size: 0.72rem; color: #475569; line-height: 1.4; margin: 0; font-weight: 600;">
-                                AI surveillance is active. Stay focused on the screen. Multi-face detection is scanning.
+                                <?php echo __('proctoring_desc'); ?>
                             </p>
                         </div>
                     </div>
 
                     <!-- Guidelines Unit -->
                     <div class="card" style="padding: 15px; border-radius: 20px; border: 1px solid #E2E8F0; background: #fff5f5; margin: 0;">
-                        <h4 style="margin: 0 0 10px 0; font-weight: 800; font-size: 0.85rem; color: #c53030;">CRITICAL RULES</h4>
+                        <h4 style="margin: 0 0 10px 0; font-weight: 800; font-size: 0.85rem; color: #c53030;"><?php echo __('critical_rules'); ?></h4>
                         <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.72rem; color: #742a2a; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 15px;">
-                            <li><i class="fas fa-eye" style="margin-right: 5px;"></i> Eyes on screen</li>
-                            <li><i class="fas fa-volume-mute" style="margin-right: 8px;"></i> Maintain silence</li>
-                            <li><i class="fas fa-mobile-button" style="margin-right: 8px;"></i> No devices</li>
-                            <li><i class="fas fa-user-secret" style="margin-right: 8px;"></i> Single person only</li>
+                            <li><i class="fas fa-eye" style="margin-right: 5px;"></i> <?php echo __('eyes_on_screen'); ?></li>
+                            <li><i class="fas fa-volume-mute" style="margin-right: 8px;"></i> <?php echo __('maintain_silence'); ?></li>
+                            <li><i class="fas fa-mobile-button" style="margin-right: 8px;"></i> <?php echo __('no_devices'); ?></li>
+                            <li><i class="fas fa-user-secret" style="margin-right: 8px;"></i> <?php echo __('single_person_only'); ?></li>
                         </ul>
                     </div>
                 </div>
@@ -158,10 +163,10 @@ renderSidebar('trainee');
                 <div style="margin-top: 50px; padding: 35px; background: #f8fafc; border-radius: 24px; border: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -10px 40px rgba(0,0,0,0.02);">
                     <div style="display: flex; gap: 10px; align-items: center; color: var(--text-muted); font-weight: 600;">
                         <i class="fas fa-triangle-exclamation" style="color: #f6ad55; font-size: 1.5rem;"></i>
-                        <span>Do not close this tab or toggle between windows.</span>
+                        <span><?php echo __('do_not_close_tab_desc'); ?></span>
                     </div>
                     <button type="submit" class="btn btn-primary" style="padding: 15px 50px; font-weight: 800; font-size: 1.2rem; border-radius: 16px; background: var(--brand-navy); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: none;">
-                        FINISH EXAM <i class="fas fa-check-double" style="margin-left: 12px;"></i>
+                        <?php echo __('FINISH EXAM'); ?> <i class="fas fa-check-double" style="margin-left: 12px;"></i>
                     </button>
                 </div>
             </form>
@@ -190,8 +195,8 @@ renderSidebar('trainee');
         if (timeLeft <= 0) {
             clearInterval(countdown);
             Swal.fire({
-                title: 'Time is up!',
-                text: 'Your exam will be submitted automatically.',
+                title: '<?php echo __('time_is_up'); ?>',
+                text: '<?php echo __('exam_auto_submit_desc'); ?>',
                 icon: 'warning',
                 timer: 3000,
                 showConfirmButton: false

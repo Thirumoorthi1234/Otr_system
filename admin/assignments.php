@@ -1,7 +1,12 @@
 <?php
 // admin/assignments.php
 require_once '../includes/layout.php';
-checkRole('admin');
+// Allow both admin and trainer to access this page
+$currentUserRole = $_SESSION['role'];
+if ($currentUserRole !== 'admin' && $currentUserRole !== 'trainer') {
+    die("Access Denied");
+}
+
 
 $message = '';
 
@@ -15,31 +20,31 @@ if (isset($_POST['assign'])) {
     $stmt = $pdo->prepare("SELECT id FROM assignments WHERE trainee_id = ? AND module_id = ?");
     $stmt->execute([$trainee_id, $module_id]);
     if ($stmt->fetch()) {
-        $message = "Error: Trainee is already assigned to this module.";
+        $message = __("Error: Trainee is already assigned to this module.");
     } else {
         $stmt = $pdo->prepare("INSERT INTO assignments (trainee_id, trainer_id, module_id, assigned_date) VALUES (?, ?, ?, ?)");
         $stmt->execute([$trainee_id, $trainer_id, $module_id, $date]);
-        $message = "Assignment created successfully!";
+        $message = __("Assignment created successfully!");
     }
 }
 
 if (isset($_GET['delete'])) {
     $stmt = $pdo->prepare("DELETE FROM assignments WHERE id = ?");
     $stmt->execute([$_GET['delete']]);
-    $message = "Assignment removed.";
+    $message = __("Assignment removed.");
 }
 
-renderHeader('Training Assignments');
-renderSidebar('admin');
+renderHeader(__('Training Assignments'));
+renderSidebar($currentUserRole);
 ?>
 
 <div class="grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
     <!-- New Assignment -->
     <div class="card">
-        <h3>New Assignment</h3>
+        <h3><?php echo __('New Assignment'); ?></h3>
         <form method="POST" style="margin-top: 20px;">
             <div class="form-group">
-                <label class="form-label">Trainee</label>
+                <label class="form-label"><?php echo __('Trainee'); ?></label>
                 <select name="trainee_id" class="form-control" required>
                     <?php
                     $users = $pdo->query("SELECT id, full_name FROM users WHERE role = 'trainee'");
@@ -48,16 +53,22 @@ renderSidebar('admin');
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assign to Trainer</label>
-                <select name="trainer_id" class="form-control" required>
+                <label class="form-label"><?php echo __('Assign to Trainer'); ?></label>
+                <select name="trainer_id" class="form-control" required <?php echo $currentUserRole === 'trainer' ? 'disabled' : ''; ?>>
                     <?php
                     $users = $pdo->query("SELECT id, full_name FROM users WHERE role = 'trainer'");
-                    while ($u = $users->fetch()) echo "<option value='{$u['id']}'>{$u['full_name']}</option>";
+                    while ($u = $users->fetch()) {
+                        $selected = ($currentUserRole === 'trainer' && $u['id'] == $_SESSION['user_id']) ? 'selected' : '';
+                        echo "<option value='{$u['id']}' $selected>{$u['full_name']}</option>";
+                    }
                     ?>
                 </select>
+                <?php if ($currentUserRole === 'trainer'): ?>
+                    <input type="hidden" name="trainer_id" value="<?php echo $_SESSION['user_id']; ?>">
+                <?php endif; ?>
             </div>
             <div class="form-group">
-                <label class="form-label">Module</label>
+                <label class="form-label"><?php echo __('Module'); ?></label>
                 <select name="module_id" class="form-control" required>
                     <?php
                     $modules = $pdo->query("SELECT id, title FROM training_modules");
@@ -66,16 +77,16 @@ renderSidebar('admin');
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assignment Date</label>
+                <label class="form-label"><?php echo __('Assignment Date'); ?></label>
                 <input type="date" name="assigned_date" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
             </div>
-            <button type="submit" name="assign" class="btn btn-primary" style="width: 100%;">Create Assignment</button>
+            <button type="submit" name="assign" class="btn btn-primary" style="width: 100%;"><?php echo __('Create Assignment'); ?></button>
         </form>
     </div>
 
     <!-- Active Assignments -->
     <div class="card">
-        <h3>Active Assignments</h3>
+        <h3><?php echo __('Active Assignments'); ?></h3>
         <?php if ($message): ?>
             <div style="background: rgba(56, 161, 105, 0.1); color: #48BB78; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid rgba(56, 161, 105, 0.2);">
                 <?php echo $message; ?>
@@ -86,11 +97,11 @@ renderSidebar('admin');
             <table>
                 <thead>
                     <tr>
-                        <th>Trainee</th>
-                        <th>Trainer</th>
-                        <th>Module</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th><?php echo __('Trainee'); ?></th>
+                        <th><?php echo __('Trainer'); ?></th>
+                        <th><?php echo __('Module'); ?></th>
+                        <th><?php echo __('Status'); ?></th>
+                        <th><?php echo __('Action'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,11 +120,11 @@ renderSidebar('admin');
                         <td><strong><?php echo e($row['trainee_name']); ?></strong></td>
                         <td><?php echo e($row['trainer_name']); ?></td>
                         <td><?php echo e($row['module_name']); ?></td>
-                        <td><span class="badge <?php echo $row['status'] == 'completed' ? 'badge-success' : ($row['status'] == 'in_progress' ? 'badge-warning' : ''); ?>"><?php echo strtoupper(str_replace('_', ' ', $row['status'])); ?></span></td>
+                        <td><span class="badge <?php echo $row['status'] == 'completed' ? 'badge-success' : ($row['status'] == 'in_progress' ? 'badge-warning' : ''); ?>"><?php echo __(strtoupper(str_replace('_', ' ', $row['status']))); ?></span></td>
                         <td>
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                <a href="training_hub.php?id=<?php echo $row['id']; ?>" class="btn btn-primary" style="font-size: 0.75rem; padding: 6px 12px;"><i class="fas fa-edit"></i> Manage Training</a>
-                                <a href="assignments.php?delete=<?php echo $row['id']; ?>" class="btn" style="background: rgba(229, 62, 62, 0.1); color: var(--danger); font-size: 0.75rem; padding: 6px 12px;" onclick="return confirm('Remove assignment?')"><i class="fas fa-trash"></i></a>
+                                <a href="training_hub.php?id=<?php echo $row['id']; ?>" class="btn btn-primary" style="font-size: 0.75rem; padding: 6px 12px;"><i class="fas fa-edit"></i> <?php echo __('Manage Training'); ?></a>
+                                <a href="assignments.php?delete=<?php echo $row['id']; ?>" class="btn" style="background: rgba(229, 62, 62, 0.1); color: var(--danger); font-size: 0.75rem; padding: 6px 12px;" onclick="return confirm('<?php echo __('Remove assignment?'); ?>')"><i class="fas fa-trash"></i></a>
                             </div>
                         </td>
                     </tr>

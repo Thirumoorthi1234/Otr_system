@@ -10,7 +10,7 @@ $message = '';
 if (isset($_GET['delete_progress'])) {
     $stmt = $pdo->prepare("DELETE FROM trainee_checklist_progress WHERE id = ?");
     $stmt->execute([$_GET['delete_progress']]);
-    $message = "Progress record removed.";
+    $message = __("progress_record_removed");
 }
 
 // Handle Add Progress Manual
@@ -21,10 +21,10 @@ if (isset($_POST['add_progress'])) {
     
     $stmt = $pdo->prepare("INSERT IGNORE INTO trainee_checklist_progress (trainee_id, checklist_id, is_done, trainer_id, completed_at) VALUES (?, ?, 1, ?, NOW())");
     $stmt->execute([$t_id, $topic_id, $trainer_id]);
-    $message = "Record added successfully!";
+    $message = __("record_added_successfully");
 }
 
-renderHeader('Induction Progress Management');
+renderHeader(__('induction_progress_management'));
 renderSidebar($_SESSION['role']);
 ?>
 
@@ -32,11 +32,11 @@ renderSidebar($_SESSION['role']);
     <!-- Selector Side -->
     <div>
         <div class="card" style="margin-bottom: 25px;">
-            <h3>Select Trainee</h3>
+            <h3><?php echo __('select_trainee'); ?></h3>
             <form method="GET" style="margin-top: 15px;">
                 <div class="form-group">
                     <select name="trainee_id" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Choose Trainee --</option>
+                        <option value=""><?php echo __('-- Choose Trainee --'); ?></option>
                         <?php
                         $users = $pdo->query("SELECT id, full_name, employee_id FROM users WHERE role = 'trainee' ORDER BY full_name ASC");
                         while ($u = $users->fetch()):
@@ -52,11 +52,11 @@ renderSidebar($_SESSION['role']);
 
         <?php if ($trainee_id): ?>
         <div class="card">
-            <h3>Record New Entry</h3>
+            <h3><?php echo __('record_new_entry'); ?></h3>
             <form method="POST" style="margin-top: 15px;">
                 <input type="hidden" name="trainee_id" value="<?php echo $trainee_id; ?>">
                 <div class="form-group">
-                    <label class="form-label">Induction Topic</label>
+                    <label class="form-label"><?php echo __('induction_topic'); ?></label>
                     <select name="topic_id" class="form-control" required>
                         <?php
                         // Only show topics not yet completed
@@ -69,7 +69,7 @@ renderSidebar($_SESSION['role']);
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Certified By (Trainer)</label>
+                    <label class="form-label"><?php echo __('certified_by_trainer'); ?></label>
                     <select name="trainer_id" class="form-control" required>
                         <?php
                         $trainers = $pdo->query("SELECT id, full_name FROM users WHERE role = 'trainer'");
@@ -78,7 +78,7 @@ renderSidebar($_SESSION['role']);
                     </select>
                 </div>
                 <button type="submit" name="add_progress" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-plus-circle"></i> Add Record
+                    <i class="fas fa-plus-circle"></i> <?php echo __('add_record'); ?>
                 </button>
             </form>
         </div>
@@ -90,7 +90,7 @@ renderSidebar($_SESSION['role']);
         <?php if (!$trainee_id): ?>
             <div style="text-align: center; padding: 60px;">
                 <i class="fas fa-id-badge" style="font-size: 3rem; color: #ddd; margin-bottom: 20px;"></i>
-                <p style="color: var(--text-muted);">Please select a trainee to manage their induction records.</p>
+                <p style="color: var(--text-muted);"><?php echo __('select_trainee_to_manage_induction_desc'); ?></p>
             </div>
         <?php else: 
             $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
@@ -105,20 +105,21 @@ renderSidebar($_SESSION['role']);
         ?>
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
                 <div>
-                    <h3><?php echo e($t_info['full_name']); ?>'s Records</h3>
+                    <h3><?php echo e($t_info['full_name']); ?>'s <?php echo __('Records'); ?></h3>
                     <p style="font-size: 0.85rem; color: var(--text-muted);"><?php echo e($t_info['employee_id']); ?> | <?php echo e($t_info['department']); ?></p>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="otr_form.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: var(--primary-blue); color: white; font-size: 0.85rem;"><i class="fas fa-file-invoice"></i> Cover</a>
-                    <a href="induction_p2_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> P2</a>
-                    <a href="induction_p3_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> P3</a>
+                    <a href="otr_form.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: var(--primary-blue); color: white; font-size: 0.85rem;"><i class="fas fa-file-invoice"></i> <?php echo __('Cover'); ?></a>
+                    <a href="induction_p2_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P2'); ?></a>
+                    <a href="induction_p3_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P3'); ?></a>
                     <?php if ($assignment_id): ?>
-                        <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-tools"></i> SDC</a>
-                        <a href="otj_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> OTJ</a>
+                        <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-tools"></i> <?php echo __('SDC'); ?></a>
+                        <a href="otj_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OTJ P1'); ?></a>
+                        <a href="otj_p2_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OTJ P2'); ?></a>
                     <?php endif; ?>
-                    <a href="score_sheet_entry.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #805AD5; font-size: 0.85rem;"><i class="fas fa-star"></i> Score</a>
-                    <a href="feedback_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-comment-dots"></i> Feedback</a>
-                    <a href="../<?php echo $_SESSION['role']; ?>/dashboard.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: #4A5568; font-size: 0.85rem;"><i class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="score_sheet_entry.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #805AD5; font-size: 0.85rem;"><i class="fas fa-star"></i> <?php echo __('Score'); ?></a>
+                    <a href="feedback_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-comment-dots"></i> <?php echo __('Feedback'); ?></a>
+                    <a href="../<?php echo $_SESSION['role']; ?>/dashboard.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: #4A5568; font-size: 0.85rem;"><i class="fas fa-chart-line"></i> <?php echo __('Dashboard'); ?></a>
                 </div>
             </div>
 
@@ -132,11 +133,11 @@ renderSidebar($_SESSION['role']);
                 <table>
                     <thead>
                         <tr>
-                            <th>Day</th>
-                            <th>Topic</th>
-                            <th>Completed At</th>
-                            <th>Signed By</th>
-                            <th>Action</th>
+                            <th><?php echo __('Day'); ?></th>
+                            <th><?php echo __('Topic'); ?></th>
+                            <th><?php echo __('completed_at'); ?></th>
+                            <th><?php echo __('signed_by'); ?></th>
+                            <th><?php echo __('action'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -159,14 +160,14 @@ renderSidebar($_SESSION['role']);
                             <td style="font-size: 0.85rem;"><?php echo e($row['trainer_name'] ?? '-'); ?></td>
                             <td>
                                 <a href="induction_records.php?trainee_id=<?php echo $trainee_id; ?>&delete_progress=<?php echo $row['id']; ?>" 
-                                   style="color: var(--danger);" onclick="return confirm('Remove this record?')">
+                                   style="color: var(--danger);" onclick="return confirm('<?php echo __('remove_record_confirm'); ?>')">
                                    <i class="fas fa-trash-alt"></i>
                                 </a>
                             </td>
                         </tr>
                         <?php endwhile; ?>
                         <?php if ($stmt->rowCount() == 0): ?>
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">No induction records found for this trainee.</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;"><?php echo __('no_induction_records_found'); ?></td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

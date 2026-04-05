@@ -116,7 +116,7 @@ $otj_stages = $stmt->fetchAll();
     </div>
 
     <div class="footer">
-        <span>Page 5 of 7</span>
+        <span>Page 5 of 8</span>
     </div>
 </div>
 
