@@ -31,7 +31,7 @@ return [
     'my_profile'            => 'എന്റെ പ്രൊഫൈൽ',
     'settings'              => 'ക്രമീകരണങ്ങൾ',
     'logout'                => 'ലോഗൗട്ട്',
-    'powered_by'            => 'പവർഡ് ബൈ',
+    'powered_by'            => 'Powered by',
     'success'               => 'വിജയം!',
     'error'                 => 'പിശക്!',
     'switch_language'       => 'ഭാഷ മാറ്റുക',
@@ -156,6 +156,11 @@ return [
     'camera_proctoring_desc' => 'പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ, AI ഫെയ്സ് ഡിറ്റക്ഷൻ മോണിറ്ററിംഗിനായി പരീക്ഷാ വേളയിൽ ട്രെയിനികൾ അവരുടെ ക്യാമറ ഓണാക്കി വെക്കണം.',
     'save_exam'             => 'പരീക്ഷ സംരക്ഷിക്കുക',
     'module_category_placeholder' => 'ഉദാ: സേഫ്റ്റി, ലീൻ (Safety, Lean)',
+    'sms_otp_settings'      => 'SMS / OTP ക്രമീകരണങ്ങൾ',
+    'refresher_training'    => 'റിഫ്രഷർ പരിശീലനം',
+    'mapping_status'        => 'മാപ്പിംഗ് നില',
+    'skill_matrix'          => 'സ്കിൽ മാറ്റ്രിക്സ്',
+    'ojt_evidence'          => 'OJT തെളിവുകൾ',
     
     // Reports Module
     'Dashboard Summary'     => 'ഡാഷ്‌ബോർഡ് സംഗ്രഹം',

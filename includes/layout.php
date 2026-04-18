@@ -4,6 +4,8 @@ require_once 'config.php';
 require_once 'functions.php';
 
 function renderHeader($title) {
+    global $currentPageTitle;
+    $currentPageTitle = $title;
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo getCurrentLang(); ?>">
@@ -123,11 +125,11 @@ function renderSidebar($role) {
             </a>
             <a href="<?php echo BASE_URL; ?>admin/sms_settings.php" class="menu-item <?php echo isActive('sms_settings.php'); ?>" data-label="SMS Settings">
                 <i class="fas fa-sms"></i>
-                <span class="menu-text">SMS / OTP Settings</span>
+                <span class="menu-text"><?php echo __('sms_otp_settings'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>admin/refresher_training.php" class="menu-item <?php echo isActive('refresher_training.php'); ?>" data-label="Refresher">
                 <i class="fas fa-redo"></i>
-                <span class="menu-text">Refresher Training</span>
+                <span class="menu-text"><?php echo __('refresher_training'); ?></span>
             </a>
             <?php endif; ?>
 
@@ -138,7 +140,7 @@ function renderSidebar($role) {
             </a>
             <a href="<?php echo BASE_URL; ?>trainer/mapping_status.php" class="menu-item <?php echo isActive('mapping_status.php'); ?>" data-label="Mapping Status">
                 <i class="fas fa-sitemap"></i>
-                <span class="menu-text">Mapping Status</span>
+                <span class="menu-text"><?php echo __('mapping_status'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>admin/induction_records.php" class="menu-item <?php echo isActive('induction_records.php'); ?>" data-label="Induction">
                 <i class="fas fa-id-badge"></i>
@@ -158,7 +160,7 @@ function renderSidebar($role) {
             </a>
             <a href="<?php echo BASE_URL; ?>trainer/skill_matrix.php" class="menu-item <?php echo isActive('skill_matrix.php'); ?>" data-label="Skill Matrix">
                 <i class="fas fa-table"></i>
-                <span class="menu-text">Skill Matrix</span>
+                <span class="menu-text"><?php echo __('skill_matrix'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>admin/training_hub.php" class="menu-item <?php echo isActive('training_hub.php'); ?>" data-label="Training Hub">
                 <i class="fas fa-laptop-code"></i>
@@ -166,7 +168,7 @@ function renderSidebar($role) {
             </a>
             <a href="<?php echo BASE_URL; ?>admin/refresher_training.php" class="menu-item <?php echo isActive('refresher_training.php'); ?>" data-label="Refresher">
                 <i class="fas fa-redo"></i>
-                <span class="menu-text">Refresher Training</span>
+                <span class="menu-text"><?php echo __('refresher_training'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>trainer/questions.php" class="menu-item <?php echo isActive('questions.php'); ?>" data-label="Questions">
                 <i class="fas fa-question-circle"></i>
@@ -189,11 +191,11 @@ function renderSidebar($role) {
             </a>
             <a href="<?php echo BASE_URL; ?>trainee/ojt_camera.php" class="menu-item <?php echo isActive('ojt_camera.php'); ?>" data-label="OJT Evidence">
                 <i class="fas fa-camera"></i>
-                <span class="menu-text">OJT Evidence</span>
+                <span class="menu-text"><?php echo __('ojt_evidence'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>trainee/refresher.php" class="menu-item <?php echo isActive('refresher.php'); ?>" data-label="Refresher">
                 <i class="fas fa-redo"></i>
-                <span class="menu-text">Refresher Training</span>
+                <span class="menu-text"><?php echo __('refresher_training'); ?></span>
             </a>
             <a href="<?php echo BASE_URL; ?>trainee/results.php" class="menu-item <?php echo isActive('results.php'); ?>" data-label="Results">
                 <i class="fas fa-award"></i>
@@ -226,7 +228,7 @@ function renderSidebar($role) {
         </nav>
 
         <div class="powered-by-bar">
-            <div class="pb-label"><?php echo __('powered_by'); ?></div>
+            <div class="pb-label">Powered by</div>
             <img src="<?php echo BASE_URL; ?>assets/img/profiles/powered_by.svg" alt="Learnlike">
         </div>
     </aside>
@@ -249,25 +251,30 @@ function renderSidebar($role) {
                 </div>
                 <h1 class="page-title" style="margin:0;">
                     <?php 
-                    $pageKey = basename($_SERVER['PHP_SELF'], '.php');
-                    // Map file names to translation keys
-                    $titleMap = [
-                        'users' => 'user_management',
-                        'inactive_users' => 'inactive_members',
-                        'modules' => 'training_modules',
-                        'induction_topics' => 'induction_topics',
-                        'induction_records' => 'induction_records',
-                        'score_sheet_entry' => 'induction_scores',
-                        'training_hub' => 'training_hub',
-                        'trainees' => 'my_trainees',
-                        'progress' => 'training_progress',
-                        'questions' => 'question_bank',
-                        'my-training' => 'my_training',
-                        'employees' => 'all_employees',
-                        'my-results' => 'my_results'
-                    ];
-                    $tKey = $titleMap[$pageKey] ?? str_replace(['-', ' '], '_', strtolower($pageKey));
-                    echo __($tKey, ucwords(str_replace(['_', '-'], ' ', $pageKey))); 
+                    global $currentPageTitle;
+                    if (isset($currentPageTitle) && !empty($currentPageTitle)) {
+                        echo $currentPageTitle;
+                    } else {
+                        $pageKey = basename($_SERVER['PHP_SELF'], '.php');
+                        // Map file names to translation keys
+                        $titleMap = [
+                            'users' => 'user_management',
+                            'inactive_users' => 'inactive_members',
+                            'modules' => 'training_modules',
+                            'induction_topics' => 'induction_topics',
+                            'induction_records' => 'induction_records',
+                            'score_sheet_entry' => 'induction_scores',
+                            'training_hub' => 'training_hub',
+                            'trainees' => 'my_trainees',
+                            'progress' => 'training_progress',
+                            'questions' => 'question_bank',
+                            'my-training' => 'my_training',
+                            'employees' => 'all_employees',
+                            'my-results' => 'my_results'
+                        ];
+                        $tKey = $titleMap[$pageKey] ?? str_replace(['-', ' '], '_', strtolower($pageKey));
+                        echo __($tKey, ucwords(str_replace(['_', '-'], ' ', $pageKey))); 
+                    }
                     ?>
                 </h1>
             </div>
@@ -394,8 +401,8 @@ function renderFooter() {
     </script>
     <script src="<?php echo BASE_URL; ?>assets/js/main.js?v=1.6"></script>
     <?php 
-        // Only load live monitoring camera when actively rendering course material/OJT
-        if (isset($_SESSION['role']) && $_SESSION['role'] === 'trainee' && basename($_SERVER['PHP_SELF']) === 'course-material.php'): 
+        // Only load live monitoring camera when actively taking an exam
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'trainee' && basename($_SERVER['PHP_SELF']) === 'exam.php'): 
     ?>
     <script src="<?php echo BASE_URL; ?>assets/js/camera-monitor.js?v=1.1"></script>
     <?php endif; ?>
@@ -439,6 +446,21 @@ function renderFooter() {
         setInterval(updateClock, 1000);
         updateClock();
     </script>
+    
+    <!-- Invisible Google Translate for Dynamic Content -->
+    <div id="google_translate_element" style="display:none;"></div>
+    <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+    }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <style>
+        /* Hide Google Translate UI completely so it works in the background via our custom dropdown */
+        body { top: 0 !important; }
+        .skiptranslate { display: none !important; }
+        #goog-gt-tt { display: none !important; }
+    </style>
 </body>
 </html>
 <?php

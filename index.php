@@ -32,12 +32,6 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/svg+xml" href="assets/img/profiles/favicon.svg">
     <style>
-        /* ── Tab switcher ─────────────────────────────────── */
-        .login-tabs { display:flex; background:#f1f5f9; border-radius:14px; padding:5px; margin-bottom:28px; gap:4px; }
-        .login-tab-btn { flex:1; padding:11px 8px; border:none; background:transparent; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.25s; color:#64748b; display:flex; align-items:center; justify-content:center; gap:7px; }
-        .login-tab-btn.active { background:#fff; color:var(--primary,#0b70b7); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-        .login-tab-btn:hover:not(.active) { background:rgba(255,255,255,0.6); }
-
         /* ── Alerts ───────────────────────────────────────── */
         .alert { padding:12px 16px; border-radius:10px; margin-bottom:18px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:10px; }
         .alert-danger  { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
@@ -80,6 +74,7 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
         /* ── SMS Provider notice ──────────────────────────── */
         .sms-notice { font-size:0.76rem; color:#94a3b8; text-align:center; margin-top:6px; }
     </style>
+    <script>window.BASE_URL = '<?php echo BASE_URL; ?>';</script>
 </head>
 <body class="lang-<?php echo getCurrentLang(); ?>">
 
@@ -140,15 +135,6 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
         </div>
         <?php endif; ?>
 
-        <!-- ── Tab Switcher ── -->
-        <div class="login-tabs">
-            <button class="login-tab-btn <?php echo $tab === 'standard' ? 'active' : ''; ?>" onclick="switchTab('standard')" id="tabBtnStandard">
-                <i class="fas fa-id-badge"></i> Employee Login
-            </button>
-            <button class="login-tab-btn <?php echo $tab === 'otp' ? 'active' : ''; ?>" onclick="switchTab('otp')" id="tabBtnOtp">
-                <i class="fas fa-mobile-alt"></i> Trainee OTP Login
-            </button>
-        </div>
 
         <!-- ══════════════════════════════════════════════════
              STANDARD LOGIN
@@ -167,6 +153,11 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
                 <button type="submit" name="login" class="btn btn-primary" style="width:100%;margin-top:10px;padding:15px;">
                     <i class="fas fa-right-to-bracket"></i> <?php echo __('sign_in'); ?>
                 </button>
+                <div style="text-align:center; margin-top:20px;">
+                    <a href="javascript:void(0)" onclick="switchTab('otp')" style="color:#64748b; font-size:0.9rem; text-decoration:none; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fas fa-mobile-alt" style="color:var(--primary);"></i> Trainee OTP Login
+                    </a>
+                </div>
             </form>
         </div>
 
@@ -174,31 +165,28 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
              TRAINEE OTP LOGIN
         ══════════════════════════════════════════════════ -->
         <div id="tab-otp" style="<?php echo $tab !== 'otp' ? 'display:none;' : ''; ?>">
-
             <?php if ($step === 'send'): ?>
-            <!-- ─── Step 1: Enter Aadhaar or Mobile ─── -->
             <div style="text-align:center; margin-bottom:22px;">
-                <div style="width:56px;height:56px;background:linear-gradient(135deg,#0369a1,#7c3aed);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 15px rgba(3,105,161,0.25);">
-                    <i class="fas fa-fingerprint" style="color:#fff;font-size:1.5rem;"></i>
+                <div style="width:56px;height:56px;background:linear-gradient(135deg,#0369a1,#0b70b7);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 15px rgba(3,105,161,0.25);">
+                    <i class="fas fa-mobile-screen-button" style="color:#fff;font-size:1.5rem;"></i>
                 </div>
-                <div style="font-weight:800;color:#0f172a;font-size:1.05rem;">Enter your Aadhaar or Mobile</div>
+                <div style="font-weight:800;color:#0f172a;font-size:1.05rem;">Enter your Mobile Number</div>
                 <div style="color:#64748b;font-size:0.85rem;margin-top:4px;">An OTP will be sent to your registered mobile number</div>
             </div>
 
             <form action="includes/auth.php" method="POST">
                 <div class="form-group">
                     <label class="form-label" style="display:flex;align-items:center;gap:8px;">
-                        <i class="fas fa-fingerprint" style="color:#7c3aed;"></i>
-                        Aadhaar Number or Mobile Number
+                        <i class="fas fa-mobile-alt" style="color:#7c3aed;"></i>
+                        Mobile Number
                     </label>
                     <input type="text" name="identifier" class="form-control id-input"
-                           placeholder="Enter 12-digit Aadhaar or 10-digit Mobile"
-                           maxlength="12" inputmode="numeric"
+                           placeholder="Enter 10-digit Mobile Number"
+                           maxlength="10" inputmode="numeric"
                            oninput="this.value=this.value.replace(/[^0-9]/,'')"
                            required autofocus>
                     <div class="sms-notice">
                         <i class="fas fa-shield-alt"></i>
-                        If Aadhaar is entered, OTP goes to Aadhaar-linked mobile &nbsp;|&nbsp;
                         Powered by <?php echo SMS_PROVIDER !== 'mock' ? ucfirst(SMS_PROVIDER) : 'Dev Mode'; ?>
                     </div>
                 </div>
@@ -206,6 +194,11 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
                         style="width:100%;padding:15px;margin-top:10px;background:linear-gradient(135deg,#0369a1,#0b70b7);font-size:1rem;font-weight:800;">
                     <i class="fas fa-paper-plane"></i>&nbsp; Send OTP
                 </button>
+                <div style="text-align:center; margin-top:20px;">
+                    <a href="javascript:void(0)" onclick="switchTab('standard')" style="color:#64748b; font-size:0.9rem; text-decoration:none; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fas fa-id-badge" style="color:var(--primary);"></i> Employee Login
+                    </a>
+                </div>
             </form>
 
             <?php elseif ($step === 'verify'): ?>
@@ -225,13 +218,13 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
             <div class="mobile-badge">
                 <i class="fas fa-sms"></i>
                 <div>
-                    OTP sent to <strong style="letter-spacing:2px;"><?php echo htmlspecialchars($maskedMobile); ?></strong>
-                    <span style="font-size:0.75rem;font-weight:500;color:#3b82f6;display:block;">Valid for <?php echo OTP_EXPIRY_MINUTES; ?> minutes</span>
+                    Login OTP for Learnlike OTR app sent to <strong style="letter-spacing:2px;"><?php echo htmlspecialchars($maskedMobile); ?></strong>
+                    <span style="font-size:0.75rem;font-weight:500;color:#3b82f6;display:block;">Valid for 5 mins</span>
                 </div>
             </div>
             <?php else: ?>
             <div class="alert alert-info">
-                <i class="fas fa-sms"></i> OTP sent to your registered mobile. Valid for <?php echo OTP_EXPIRY_MINUTES; ?> minutes.
+                <i class="fas fa-sms"></i> Login OTP for Learnlike OTR app sent. Valid for 5 mins.
             </div>
             <?php endif; ?>
 
@@ -253,6 +246,11 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
                         style="width:100%;padding:15px;margin-top:10px;background:linear-gradient(135deg,#059669,#10b981);font-size:1rem;font-weight:800;">
                     <i class="fas fa-check-circle"></i>&nbsp; Verify & Login
                 </button>
+                <div style="text-align:center; margin-top:20px;">
+                    <a href="javascript:void(0)" onclick="switchTab('standard')" style="color:#64748b; font-size:0.9rem; text-decoration:none; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fas fa-id-badge" style="color:var(--primary);"></i> Employee Login
+                    </a>
+                </div>
             </form>
 
             <!-- Resend OTP -->
@@ -260,8 +258,8 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
                 <span id="resendTimerWrap" class="resend-timer" <?php echo $resendSecsLeft > 0 ? '' : 'style="display:none;"'; ?>>
                     <i class="fas fa-clock"></i> Resend OTP in <span id="resendCountdown"><?php echo $resendSecsLeft; ?></span>s
                 </span>
-                <form action="includes/auth.php" method="POST" id="resendForm"
-                      style="display:inline; <?php echo $resendSecsLeft > 0 ? 'display:none;' : ''; ?>" id="resendFormWrap">
+                <form action="includes/auth.php" method="POST" id="resendFormWrap"
+                      style="display:inline; <?php echo $resendSecsLeft > 0 ? 'display:none;' : ''; ?>">
                     <button type="submit" name="resend_otp" class="resend-btn-link">
                         <i class="fas fa-redo-alt"></i> Resend OTP
                     </button>
@@ -291,8 +289,6 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
 function switchTab(name) {
     document.getElementById('tab-standard').style.display = name === 'standard' ? '' : 'none';
     document.getElementById('tab-otp').style.display      = name === 'otp'      ? '' : 'none';
-    document.getElementById('tabBtnStandard').classList.toggle('active', name === 'standard');
-    document.getElementById('tabBtnOtp').classList.toggle('active', name === 'otp');
     const url = new URL(window.location);
     url.searchParams.set('tab', name);
     if (name === 'standard') { url.searchParams.delete('step'); url.searchParams.delete('dev_otp'); }
@@ -303,11 +299,8 @@ function switchTab(name) {
 const otpInput = document.getElementById('otpInput');
 if (otpInput) {
     otpInput.addEventListener('input', function() {
+        // Just clean the input, do not auto-submit
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, <?php echo OTP_DIGITS; ?>);
-        if (this.value.length === <?php echo OTP_DIGITS; ?>) {
-            // Slight delay so user can see what they typed
-            setTimeout(() => document.getElementById('otpVerifyForm').submit(), 300);
-        }
     });
 }
 
@@ -328,7 +321,59 @@ if (resendSecs > 0) {
     }, 1000);
 }
 
+// ── AJAX Form Submission ─────────────────────────────────────
+document.addEventListener('submit', async function(e) {
+    const form = e.target;
+    const actionAttr = form.getAttribute('action') || '';
+    
+    if (actionAttr.includes('auth.php') || form.id === 'resendFormWrap') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+        formData.append('ajax', '1');
+        
+        if (submitBtn && submitBtn.name) {
+            formData.append(submitBtn.name, '1');
+        }
+
+        try {
+            const fetchUrl = form.action;
+            const response = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                window.location.href = result.redirect;
+            } else {
+                if (submitBtn) submitBtn.disabled = false;
+                alert(result.message || 'Authentication failed');
+            }
+        } catch (error) {
+            console.error('Login Error:', error);
+            if (submitBtn) submitBtn.disabled = false;
+            alert('Connection Error: Please check your internet or contact support.');
+        }
+    }
+});
+
 // ── Language dropdown close ───────────────────────────────────
+// ── Clear Error from URL ────────────────────────────────────
+if (window.location.search.includes('error=')) {
+    const url = new URL(window.location);
+    url.searchParams.delete('error');
+    url.searchParams.delete('detail');
+    window.history.replaceState({}, '', url);
+}
+
 document.querySelector('#loginLangMenu').addEventListener('click', e => e.stopPropagation());
 document.addEventListener('click', () => document.getElementById('loginLangMenu').classList.remove('open'));
 </script>

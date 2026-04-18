@@ -31,7 +31,7 @@ return [
     'my_profile'            => 'ನನ್ನ ಪ್ರೊಫೈಲ್',
     'settings'              => 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
     'logout'                => 'ಲಾಗ್ ಔಟ್',
-    'powered_by'            => 'ಚಾಲಿತವಾಗಿದೆ',
+    'powered_by'            => 'Powered by',
     'success'               => 'ಯಶಸ್ಸು!',
     'error'                 => 'ದೋಷ!',
     'switch_language'       => 'ಭಾಷೆಯನ್ನು ಬದಲಾಯಿಸಿ',
@@ -156,6 +156,11 @@ return [
     'camera_proctoring_desc' => 'ಸಕ್ರಿಯಗೊಳಿಸಿದಾಗ, AI ಮುಖ ಪತ್ತೆ ಹಚ್ಚುವಿಕೆಗಾಗಿ ಪರೀಕ್ಷೆಯ ಸಮಯದಲ್ಲಿ ತರಬೇತಿದಾರರು ತಮ್ಮ ಕ್ಯಾಮೆರಾವನ್ನು ಆನ್ ಮಾಡಿರಬೇಕು.',
     'save_exam'             => 'ಪರೀಕ್ಷೆಯನ್ನು ಉಳಿಸಿ',
     'module_category_placeholder' => 'ಉದಾ: ಸೇಫ್ಟಿ, ಲೀನ್ (Safety, Lean)',
+    'sms_otp_settings'      => 'SMS / OTP ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
+    'refresher_training'    => 'ರಿಫ್ರೆಶರ್ ತರಬೇತಿ',
+    'mapping_status'        => 'ಮ್ಯಾಪಿಂಗ್ ಸ್ಥಿತಿ',
+    'skill_matrix'          => 'ಸ್ಕಿಲ್ ಮ್ಯಾಟ್ರಿಕ್ಸ್',
+    'ojt_evidence'          => 'OJT ಪುರಾವೆಗಳು',
     
     // Reports Module
     'Dashboard Summary'     => 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಸಾರಾಂಶ',

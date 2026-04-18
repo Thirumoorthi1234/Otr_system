@@ -72,7 +72,7 @@ foreach ($trainees as $t) {
     $exam = $stmt_ex->fetch();
     
     // 3. OTJ Stages & Hours
-    $stmt_otj = $pdo->prepare("SELECT COUNT(*), SUM(man_hours) FROM training_stages WHERE assignment_id = ?");
+    $stmt_otj = $pdo->prepare("SELECT COUNT(*) AS stage_count, SUM(man_hours) AS total_hours FROM training_stages WHERE assignment_id = ?");
     $stmt_otj->execute([$t['assignment_id']]);
     $otj = $stmt_otj->fetch();
 
@@ -89,8 +89,8 @@ foreach ($trainees as $t) {
         $ind_percent . '%',
         ($exam ? $exam['score'] : '-') . '%',
         $exam ? ucfirst($exam['status']) : '-',
-        $otj[0] ?: 0,
-        $otj[1] ?: 0
+        $otj['stage_count'] ?: 0,
+        $otj['total_hours'] ?: 0
     ]);
 }
 

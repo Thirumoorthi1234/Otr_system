@@ -31,7 +31,7 @@ return [
     'my_profile'            => 'मेरी प्रोफाइल',
     'settings'              => 'सेटिंग्स',
     'logout'                => 'लॉग आउट',
-    'powered_by'            => 'द्वारा संचालित',
+    'powered_by'            => 'Powered by',
     'success'               => 'सफलता!',
     'error'                 => 'त्रुटि!',
     'switch_language'       => 'भाषा बदलें',
@@ -156,6 +156,11 @@ return [
     'camera_proctoring_desc' => 'सक्षम होने पर, एआई चेहरा पहचान निगरानी के लिए परीक्षा के दौरान प्रशिक्षुओं का कैमरा चालू होना चाहिए।',
     'save_exam'             => 'परीक्षा सहेजें',
     'module_category_placeholder' => 'उदा. सेफ्टी, लीन',
+    'sms_otp_settings'      => 'SMS / OTP सेटिंग्स',
+    'refresher_training'    => 'रिफ्रेशर ट्रेनिंग',
+    'mapping_status'        => 'मैपिंग स्थिति',
+    'skill_matrix'          => 'स्किल मैट्रिक्स',
+    'ojt_evidence'          => 'OJT सबूत',
     
     // Reports Module
     'Dashboard Summary'     => 'डैशबोर्ड सारांश',

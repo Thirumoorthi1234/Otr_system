@@ -31,7 +31,7 @@ return [
     'my_profile'            => 'నా ప్రొఫైల్',
     'settings'              => 'సెట్టింగ్‌లు',
     'logout'                => 'లాగ్ అవుట్',
-    'powered_by'            => 'నడిచేది',
+    'powered_by'            => 'Powered by',
     'success'               => 'విజయం!',
     'error'                 => 'లోపం!',
     'switch_language'       => 'భాషను మార్చండి',
@@ -156,6 +156,11 @@ return [
     'camera_proctoring_desc' => 'ప్రారంభించినప్పుడు, AI ముఖం గుర్తింపు కోసం పరీక్ష సమయంలో శిక్షణార్థులు తమ కెమెరాను ఆన్ చేసి ఉంచాలి.',
     'save_exam'             => 'పరీక్షను సేవ్ చేయండి',
     'module_category_placeholder' => 'ఉదా: సేఫ్టీ, లీన్ (Safety, Lean)',
+    'sms_otp_settings'      => 'SMS / OTP సెట్టింగులు',
+    'refresher_training'    => 'రిఫ్రెషర్ శిక్షణ',
+    'mapping_status'        => 'మ్యాపింగ్ స్థితి',
+    'skill_matrix'          => 'స్కిల్ మ్యాట్రిక్స్',
+    'ojt_evidence'          => 'OJT ఆధారాలు',
     
     // Reports Module
     'Dashboard Summary'     => 'డ్యాష్‌బోర్డ్ సారాంశం',

@@ -1,7 +1,7 @@
 <?php
 // includes/languages/ta.php
 return [
-    'dashboard'             => 'முகப்பு',
+    'dashboard'             => 'டாஷ்போர்டு',
     'management'            => 'நிர்வாகம்',
     'user_management'       => 'பயனர் நிர்வாகம்',
     'inactive_members'      => 'செயலற்ற உறுப்பினர்கள்',
@@ -31,7 +31,7 @@ return [
     'my_profile'            => 'எனது சுயவிவரம்',
     'settings'              => 'அமைப்புகள்',
     'logout'                => 'வெளியேறு',
-    'powered_by'            => 'ஆற்றல் தந்தது',
+    'powered_by'            => 'Powered by',
     'success'               => 'வெற்றி!',
     'error'                 => 'பிழை!',
     'switch_language'       => 'மொழியை மாற்றவும்',
@@ -156,6 +156,11 @@ return [
     'camera_proctoring_desc' => 'செயல்படுத்தப்பட்டால், AI முகத்தைக் கண்டறிவதற்காகத் தேர்வின் போது பயிற்சியாளர்கள் கேமராவை இயக்கி வைத்திருக்க வேண்டும்.',
     'save_exam'             => 'தேர்வைச் சேமி',
     'module_category_placeholder' => 'எ.கா. பாதுகாப்பு, மெலிந்த (Safety, Lean)',
+    'sms_otp_settings'      => 'SMS / OTP அமைப்புகள்',
+    'refresher_training'    => 'மீள் பயிற்சி',
+    'mapping_status'        => 'வரைபட நிலை',
+    'skill_matrix'          => 'திறன் அணி',
+    'ojt_evidence'          => 'OJT சான்றுகள்',
     
     // Reports Module
     'Dashboard Summary'     => 'டாஷ்போர்டு சுருக்கம்',

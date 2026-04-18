@@ -15,6 +15,15 @@ $available_languages = [
 if (isset($_GET['lang']) && array_key_exists($_GET['lang'], $available_languages)) {
     $_SESSION['lang'] = $_GET['lang'];
     
+    // Sync with Google Translate
+    if ($_GET['lang'] === 'en') {
+        setcookie('googtrans', '', time() - 3600, '/');
+        setcookie('googtrans', '', time() - 3600, '/', $_SERVER['HTTP_HOST']); 
+    } else {
+        setcookie('googtrans', '/en/' . $_GET['lang'], time() + (86400 * 30), '/');
+        setcookie('googtrans', '/en/' . $_GET['lang'], time() + (86400 * 30), '/', $_SERVER['HTTP_HOST']);
+    }
+    
     // Redirect back to remove the lang param from URL
     $url = strtok($_SERVER['REQUEST_URI'], '?');
     

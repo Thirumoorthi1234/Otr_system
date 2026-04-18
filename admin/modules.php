@@ -13,13 +13,23 @@ if (isset($_POST['save_module'])) {
     $total_hours = $_POST['total_hours'];
     
     $curriculum_path = $_POST['current_curriculum'] ?? null;
-    if (isset($_FILES['curriculum']) && $_FILES['curriculum']['error'] == 0) {
+    
+    if (isset($_POST['remove_curriculum']) && $_POST['remove_curriculum'] == '1') {
+        $curriculum_path = null;
+        if (!empty($_POST['current_curriculum']) && file_exists('../' . $_POST['current_curriculum'])) {
+            unlink('../' . $_POST['current_curriculum']);
+        }
+    } elseif (isset($_FILES['curriculum']) && $_FILES['curriculum']['error'] == 0) {
         $uploadDir = '../assets/curriculum/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $fileName = time() . '_' . basename($_FILES['curriculum']['name']);
         $targetPath = $uploadDir . $fileName;
         if (move_uploaded_file($_FILES['curriculum']['tmp_name'], $targetPath)) {
             $curriculum_path = 'assets/curriculum/' . $fileName;
+            // Optionally delete the old file if it existed
+            if (!empty($_POST['current_curriculum']) && file_exists('../' . $_POST['current_curriculum'])) {
+                unlink('../' . $_POST['current_curriculum']);
+            }
         }
     }
 
@@ -133,8 +143,12 @@ renderSidebar('admin');
             <label class="form-label"><?php echo __('Curriculum / Training Material (PDF)'); ?></label>
             <input type="file" name="curriculum" class="form-control" accept=".pdf">
 <?php if (!empty($m['curriculum_path'])): ?>
-                <div style="margin-top: 10px; font-size: 0.85rem; color: #3182CE;">
-                    <i class="fas fa-file-pdf"></i> <?php echo __('Currently'); ?>: <a href="<?php echo BASE_URL . $m['curriculum_path']; ?>" target="_blank"><?php echo basename($m['curriculum_path']); ?></a>
+                <div style="margin-top: 10px; font-size: 0.85rem; color: #3182CE; display: flex; align-items: center; gap: 15px;">
+                    <div><i class="fas fa-file-pdf"></i> <?php echo __('Currently'); ?>: <a href="<?php echo BASE_URL . $m['curriculum_path']; ?>" target="_blank"><?php echo basename($m['curriculum_path']); ?></a></div>
+                    <label style="display: flex; align-items: center; gap: 5px; color: var(--danger); cursor: pointer;">
+                        <input type="checkbox" name="remove_curriculum" value="1" style="cursor: pointer;">
+                        <?php echo __('Remove File'); ?>
+                    </label>
                 </div>
 <?php endif; ?>
         </div>

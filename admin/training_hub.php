@@ -52,9 +52,6 @@ if (!$assignment_id) {
                         <td><a href="training_hub.php?id=<?php echo $row['id']; ?>" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;"><?php echo __('Manage'); ?></a></td>
                     </tr>
                     <?php endwhile; ?>
-                    <?php if ($stmt->rowCount() == 0): ?>
-                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;"><?php echo __('No training assignments found.'); ?></td></tr>
-                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -213,9 +210,6 @@ renderSidebar($_SESSION['role']);
                             </td>
                         </tr>
                         <?php endwhile; ?>
-                        <?php if ($stmt->rowCount() == 0): ?>
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;"><?php echo __('No stages certified yet.'); ?></td></tr>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
