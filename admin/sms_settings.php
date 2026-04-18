@@ -169,7 +169,6 @@ renderSidebar('admin');
                 <div style="margin-top:20px; background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:16px; padding:20px;">
                     <div style="font-weight:800; color:#1d4ed8; margin-bottom:10px;">System Status</div>
                     <div style="font-size:0.9rem; color:#1e40af; line-height:1.8;">
-                        <div><i class="fas fa-check-circle" style="width:20px;"></i> Active Provider: <strong><?php echo strtoupper(SMS_PROVIDER); ?></strong></div>
                         <div><i class="fas fa-shield-alt" style="width:20px;"></i> Key Status: <strong><?php echo (FAST2SMS_API_KEY && FAST2SMS_API_KEY !== ',') ? '✅ Configured' : '❌ NOT SET'; ?></strong></div>
                     </div>
                 </div>

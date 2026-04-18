@@ -123,10 +123,6 @@ function renderSidebar($role) {
                 <i class="fas fa-file-export"></i>
                 <span class="menu-text"><?php echo __('reports'); ?></span>
             </a>
-            <a href="<?php echo BASE_URL; ?>admin/sms_settings.php" class="menu-item <?php echo isActive('sms_settings.php'); ?>" data-label="SMS Settings">
-                <i class="fas fa-sms"></i>
-                <span class="menu-text"><?php echo __('sms_otp_settings'); ?></span>
-            </a>
             <a href="<?php echo BASE_URL; ?>admin/refresher_training.php" class="menu-item <?php echo isActive('refresher_training.php'); ?>" data-label="Refresher">
                 <i class="fas fa-redo"></i>
                 <span class="menu-text"><?php echo __('refresher_training'); ?></span>

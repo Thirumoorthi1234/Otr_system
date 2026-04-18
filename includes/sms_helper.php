@@ -142,7 +142,7 @@ function _sendMSG91(string $mobile, string $otp): array {
     error_log("[SMS MSG91 Response] " . $response);
 
     if (isset($result['type']) && $result['type'] === 'success') {
-        return ['success' => true, 'message' => 'OTP sent via MSG91.', 'dev_otp' => null];
+        return ['success' => true, 'message' => 'OTP sent successfully.', 'dev_otp' => null];
     }
     return ['success' => false, 'message' => 'MSG91 error: ' . ($result['message'] ?? 'Unknown'), 'dev_otp' => null];
 }
@@ -150,7 +150,7 @@ function _sendMSG91(string $mobile, string $otp): array {
 // ─── AuthKey.io Implementation ────────────────────────────────────────────────
 function _sendAuthKeyIO(string $mobile, string $otp): array {
     if (empty(AUTHKEY_API_KEY)) {
-        return ['success' => false, 'message' => 'AuthKey.io key not configured.', 'dev_otp' => null];
+        return ['success' => false, 'message' => 'SMS provider key not configured.', 'dev_otp' => null];
     }
 
     $authKey     = AUTHKEY_API_KEY;
@@ -176,7 +176,7 @@ function _sendAuthKeyIO(string $mobile, string $otp): array {
     curl_close($curl);
 
     if ($err) {
-        error_log("[SMS AuthKey.io error] " . $err);
+        error_log("[SMS provider error] " . $err);
         return ['success' => false, 'message' => 'Network error: ' . $err, 'dev_otp' => null];
     }
 
@@ -184,9 +184,7 @@ function _sendAuthKeyIO(string $mobile, string $otp): array {
     // The user's snippet just returns true if curl_exec finished.
     // I'll be a bit more robust and check the response if possible, but for now I'll follow the user's logic of 'result=1'.
     
-    error_log("[SMS AuthKey.io Response] " . $response);
-    
-    return ['success' => true, 'message' => 'OTP sent via AuthKey.io.', 'dev_otp' => null];
+    return ['success' => true, 'message' => 'OTP sent successfully.', 'dev_otp' => null];
 }
 
 // ─── Textlocal Implementation ─────────────────────────────────────────────────

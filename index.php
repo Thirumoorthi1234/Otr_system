@@ -185,10 +185,6 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
                            maxlength="10" inputmode="numeric"
                            oninput="this.value=this.value.replace(/[^0-9]/,'')"
                            required autofocus>
-                    <div class="sms-notice">
-                        <i class="fas fa-shield-alt"></i>
-                        Powered by <?php echo SMS_PROVIDER !== 'mock' ? ucfirst(SMS_PROVIDER) : 'Dev Mode'; ?>
-                    </div>
                 </div>
                 <button type="submit" name="send_otp" class="btn btn-primary"
                         style="width:100%;padding:15px;margin-top:10px;background:linear-gradient(135deg,#0369a1,#0b70b7);font-size:1rem;font-weight:800;">
