@@ -127,6 +127,10 @@ function renderSidebar($role) {
                 <i class="fas fa-redo"></i>
                 <span class="menu-text"><?php echo __('refresher_training'); ?></span>
             </a>
+            <a href="<?php echo BASE_URL; ?>notifications_inbox.php" class="menu-item <?php echo isActive('notifications_inbox.php'); ?>" data-label="Notifications">
+                <i class="fas fa-inbox"></i>
+                <span class="menu-text"><?php echo __('notifications', 'Notifications'); ?></span>
+            </a>
             <?php endif; ?>
 
             <?php if ($role == 'trainer'): ?>
@@ -178,6 +182,10 @@ function renderSidebar($role) {
                 <i class="fas fa-chart-line"></i>
                 <span class="menu-text"><?php echo __('effectiveness'); ?></span>
             </a>
+            <a href="<?php echo BASE_URL; ?>notifications_inbox.php" class="menu-item <?php echo isActive('notifications_inbox.php'); ?>" data-label="Notifications">
+                <i class="fas fa-inbox"></i>
+                <span class="menu-text"><?php echo __('notifications', 'Notifications'); ?></span>
+            </a>
             <?php endif; ?>
 
             <?php if ($role == 'trainee'): ?>
@@ -201,6 +209,10 @@ function renderSidebar($role) {
                 <i class="fas fa-comment-dots"></i>
                 <span class="menu-text"><?php echo __('my_feedback'); ?></span>
             </a>
+            <a href="<?php echo BASE_URL; ?>notifications_inbox.php" class="menu-item <?php echo isActive('notifications_inbox.php'); ?>" data-label="Notifications">
+                <i class="fas fa-inbox"></i>
+                <span class="menu-text"><?php echo __('notifications', 'Notifications'); ?></span>
+            </a>
             <?php endif; ?>
 
             <?php if ($role == 'management'): ?>
@@ -219,6 +231,10 @@ function renderSidebar($role) {
             <a href="<?php echo BASE_URL; ?>management/effectiveness.php" class="menu-item <?php echo isActive('effectiveness.php'); ?>" data-label="Effectiveness">
                 <i class="fas fa-chart-line"></i>
                 <span class="menu-text"><?php echo __('effectiveness'); ?></span>
+            </a>
+            <a href="<?php echo BASE_URL; ?>notifications_inbox.php" class="menu-item <?php echo isActive('notifications_inbox.php'); ?>" data-label="Notifications">
+                <i class="fas fa-inbox"></i>
+                <span class="menu-text"><?php echo __('notifications', 'Notifications'); ?></span>
             </a>
             <?php endif; ?>
         </nav>
@@ -395,7 +411,7 @@ function renderFooter() {
             }
         };
     </script>
-    <script src="<?php echo BASE_URL; ?>assets/js/main.js?v=1.6"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/main.js?v=1.8"></script>
     <?php 
         // Only load live monitoring camera when actively taking an exam
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'trainee' && basename($_SERVER['PHP_SELF']) === 'exam.php'): 

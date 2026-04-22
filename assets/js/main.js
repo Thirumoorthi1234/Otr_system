@@ -116,44 +116,56 @@ function renderNotifications(notifications) {
     const list = document.getElementById('notifList');
     if (!list) return;
     if (!notifications.length) {
-        list.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i> No notifications</div>';
+        list.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i> No notifications</div>' +
+            `<div style="padding:10px 14px;border-top:1px solid var(--border-color);text-align:center;">
+                <a href="${window.BASE_URL}notifications_inbox.php" style="font-size:.82rem;font-weight:600;color:var(--primary-blue);text-decoration:none;">
+                    <i class="fas fa-inbox" style="margin-right:4px;"></i>Open Inbox
+                </a>
+            </div>`;
         return;
     }
-    list.innerHTML = notifications.map(n => `
-        <div class="notif-item ${n.is_read == '0' ? 'unread' : ''}" onclick="markRead(${n.id}, this)" data-link="${n.link || ''}">
+    const iconMap = { info:'fa-info-circle', success:'fa-check-circle', warning:'fa-exclamation-triangle', danger:'fa-times-circle' };
+    list.innerHTML = notifications.map(n => {
+        const icon = iconMap[n.type] || 'fa-bell';
+        return `
+        <div class="notif-item ${n.is_read == '0' ? 'unread' : ''}" onclick="goToInbox(${n.id}, this)" style="cursor:pointer;">
             <div class="notif-dot"></div>
             <div class="notif-body">
                 <div class="notif-title">${escapeHtml(n.title)}</div>
                 <div class="notif-msg">${escapeHtml(n.message || '')}</div>
                 <div class="notif-time"><i class="fas fa-clock" style="margin-right:3px;"></i>${timeAgo(n.created_at)}</div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('') +
+    `<div style="padding:10px 14px;border-top:1px solid var(--border-color);text-align:center;">
+        <a href="${window.BASE_URL}notifications_inbox.php" style="font-size:.82rem;font-weight:600;color:var(--primary-blue);text-decoration:none;">
+            <i class="fas fa-inbox" style="margin-right:4px;"></i>View All in Inbox
+        </a>
+    </div>`;
 }
 
-async function markRead(id, el) {
-    el.classList.remove('unread');
-    el.querySelector('.notif-dot').style.background = 'transparent';
-    await fetch(window.BASE_URL + 'api/notifications.php?action=mark_read&id=' + id);
-    const badge = document.getElementById('notifBadge');
-    if (badge) {
-        let count = parseInt(badge.dataset.count || 0);
-        count = Math.max(0, count - 1);
-        badge.dataset.count = count;
-        badge.textContent = count > 0 ? count : '';
-        badge.style.display = count > 0 ? 'flex' : 'none';
+async function goToInbox(id, el) {
+    if (el) {
+        el.classList.remove('unread');
+        const d = el.querySelector('.notif-dot');
+        if (d) d.style.background = 'transparent';
     }
-    const link = el.dataset.link;
-    if (link) { setTimeout(() => { window.location.href = link; }, 200); }
+    try { await fetch(window.BASE_URL + 'api/notifications.php?action=mark_read&id=' + id); } catch(e) {}
+    window.location.href = window.BASE_URL + 'notifications_inbox.php';
 }
 
 async function markAllRead() {
-    await fetch(window.BASE_URL + 'api/notifications.php?action=mark_all_read');
+    try { await fetch(window.BASE_URL + 'api/notifications.php?action=mark_all_read'); } catch(e) {}
     document.querySelectorAll('.notif-item').forEach(el => {
         el.classList.remove('unread');
-        el.querySelector('.notif-dot').style.background = 'transparent';
+        const d = el.querySelector('.notif-dot');
+        if (d) d.style.background = 'transparent';
     });
     updateNotifBadge(0);
+    // Reload inbox if already on it
+    if (window.location.href.includes('notifications_inbox.php')) {
+        window.location.reload();
+    }
 }
 
 function updateNotifBadge(count) {
@@ -195,16 +207,14 @@ document.addEventListener('click', function(e) {
         document.getElementById('profileTrigger')?.classList.remove('open');
         document.getElementById('profileMenu')?.classList.remove('open');
     }
-    // Notification dropdown
-    const ndWrap = document.querySelector('.notif-dropdown-wrap');
-    const langWrap = document.getElementById('langMenu')?.closest('.notif-dropdown-wrap');
     
-    if (ndWrap && !ndWrap.contains(e.target)) {
-        if (!e.target.closest('#langMenu') && !e.target.closest('button[onclick="toggleLangMenu()"]')) {
-            document.getElementById('notifMenu')?.classList.remove('open');
-        }
+    // Notification dropdown
+    if (!e.target.closest('button[onclick="toggleNotifMenu()"]') && !e.target.closest('#notifMenu')) {
+        document.getElementById('notifMenu')?.classList.remove('open');
     }
-    if (langWrap && !langWrap.contains(e.target)) {
+
+    // Language dropdown
+    if (!e.target.closest('button[onclick="toggleLangMenu()"]') && !e.target.closest('#langMenu')) {
         document.getElementById('langMenu')?.classList.remove('open');
     }
 });

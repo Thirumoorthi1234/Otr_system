@@ -269,7 +269,7 @@ renderSidebar('admin');
     /* Professional Print Scaling */
     @media print {
         @page { size: landscape; margin: 0.5cm; }
-        .sidebar, .header, .footer, .report-nav-group, .btn-preview-close, .btn, .db-header .btn { display: none !important; }
+        .sidebar, .header, .footer, .report-nav-group, .btn-preview-close, .btn, .db-header .btn, .pagination { display: none !important; }
         .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; border: none !important; }
         .dashboard-container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; width: 100% !important; }
         .rpt-stat-card, .chart-card, .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #E2E8F0 !important; }
@@ -783,11 +783,18 @@ renderSidebar('admin');
             </div>
 
             <?php if ($report_type == 'completion'): ?>
+            <?php
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+            $total = $pdo->query("SELECT COUNT(*) FROM assignments a JOIN users u ON a.trainee_id = u.id JOIN users tr ON a.trainer_id = tr.id JOIN training_modules m ON a.module_id = m.id")->fetchColumn();
+            $total_pages = ceil($total / $limit);
+            ?>
             <table class="employee-data-table">
                 <thead><tr><th>Trainee Name</th><th>Module</th><th>Trainer</th><th>Status</th><th>Comp. Date</th></tr></thead>
                 <tbody>
                     <?php
-                    $stmt = $pdo->query("SELECT a.*, u.full_name as trainee_name, tr.full_name as trainer_name, m.title as module_name FROM assignments a JOIN users u ON a.trainee_id = u.id JOIN users tr ON a.trainer_id = tr.id JOIN training_modules m ON a.module_id = m.id ORDER BY a.completion_date DESC");
+                    $stmt = $pdo->query("SELECT a.*, u.full_name as trainee_name, tr.full_name as trainer_name, m.title as module_name FROM assignments a JOIN users u ON a.trainee_id = u.id JOIN users tr ON a.trainer_id = tr.id JOIN training_modules m ON a.module_id = m.id ORDER BY a.completion_date DESC LIMIT $limit OFFSET $offset");
                     while ($row = $stmt->fetch()):
                     ?>
                     <tr>
@@ -801,12 +808,39 @@ renderSidebar('admin');
                 </tbody>
             </table>
             
+            <?php if ($total_pages > 1): ?>
+            <div class="pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                <?php 
+                $start_page = max(1, $page - 2);
+                $end_page = min($total_pages, $page + 2);
+                if ($start_page > 1) {
+                    echo '<a href="?type=completion&page=1" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">1</a>';
+                    if ($start_page > 2) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                }
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                    <a href="?type=completion&page=<?php echo $i; ?>" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; <?php echo $i == $page ? 'background: #0F172A; color: white;' : 'background: white; color: #0F172A; border: 1px solid #E2E8F0;'; ?>"><?php echo $i; ?></a>
+                <?php endfor; 
+                if ($end_page < $total_pages) {
+                    if ($end_page < $total_pages - 1) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                    echo '<a href="?type=completion&page='.$total_pages.'" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">'.$total_pages.'</a>';
+                }
+                ?>
+            </div>
+            <?php endif; ?>
+            
             <?php elseif ($report_type == 'performance'): ?>
+            <?php
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+            $total = $pdo->query("SELECT COUNT(*) FROM exam_results r JOIN users u ON r.trainee_id = u.id JOIN exams e ON r.exam_id = e.id")->fetchColumn();
+            $total_pages = ceil($total / $limit);
+            ?>
             <table class="employee-data-table">
                 <thead><tr><th>Trainee</th><th>Exam</th><th>Score</th><th>Attempts</th><th>Result</th></tr></thead>
                 <tbody>
                     <?php
-                    $stmt = $pdo->query("SELECT r.*, u.full_name, e.title as exam_name FROM exam_results r JOIN users u ON r.trainee_id = u.id JOIN exams e ON r.exam_id = e.id");
+                    $stmt = $pdo->query("SELECT r.*, u.full_name, e.title as exam_name FROM exam_results r JOIN users u ON r.trainee_id = u.id JOIN exams e ON r.exam_id = e.id ORDER BY r.exam_date DESC LIMIT $limit OFFSET $offset");
                     while ($row = $stmt->fetch()):
                     ?>
                     <tr>
@@ -820,7 +854,34 @@ renderSidebar('admin');
                 </tbody>
             </table>
 
+            <?php if ($total_pages > 1): ?>
+            <div class="pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                <?php 
+                $start_page = max(1, $page - 2);
+                $end_page = min($total_pages, $page + 2);
+                if ($start_page > 1) {
+                    echo '<a href="?type=performance&page=1" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">1</a>';
+                    if ($start_page > 2) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                }
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                    <a href="?type=performance&page=<?php echo $i; ?>" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; <?php echo $i == $page ? 'background: #0F172A; color: white;' : 'background: white; color: #0F172A; border: 1px solid #E2E8F0;'; ?>"><?php echo $i; ?></a>
+                <?php endfor; 
+                if ($end_page < $total_pages) {
+                    if ($end_page < $total_pages - 1) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                    echo '<a href="?type=performance&page='.$total_pages.'" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">'.$total_pages.'</a>';
+                }
+                ?>
+            </div>
+            <?php endif; ?>
+
             <?php elseif ($report_type == 'feedback'): ?>
+            <?php
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+            $total = $pdo->query("SELECT COUNT(*) FROM feedback f JOIN users u ON f.trainee_id = u.id")->fetchColumn();
+            $total_pages = ceil($total / $limit);
+            ?>
             <table class="employee-data-table">
                 <thead>
                     <tr>
@@ -839,6 +900,7 @@ renderSidebar('admin');
                         FROM feedback f 
                         JOIN users u ON f.trainee_id = u.id 
                         ORDER BY f.submitted_at DESC
+                        LIMIT $limit OFFSET $offset
                     ");
                     while ($row = $stmt->fetch()):
                     ?>
@@ -856,6 +918,27 @@ renderSidebar('admin');
                     <?php endif; ?>
                 </tbody>
             </table>
+
+            <?php if ($total_pages > 1): ?>
+            <div class="pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                <?php 
+                $start_page = max(1, $page - 2);
+                $end_page = min($total_pages, $page + 2);
+                if ($start_page > 1) {
+                    echo '<a href="?type=feedback&page=1" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">1</a>';
+                    if ($start_page > 2) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                }
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                    <a href="?type=feedback&page=<?php echo $i; ?>" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; <?php echo $i == $page ? 'background: #0F172A; color: white;' : 'background: white; color: #0F172A; border: 1px solid #E2E8F0;'; ?>"><?php echo $i; ?></a>
+                <?php endfor; 
+                if ($end_page < $total_pages) {
+                    if ($end_page < $total_pages - 1) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                    echo '<a href="?type=feedback&page='.$total_pages.'" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">'.$total_pages.'</a>';
+                }
+                ?>
+            </div>
+            <?php endif; ?>
+            
             <?php endif; ?>
 
             <!-- COMPULSORY FOOTER -->
@@ -925,6 +1008,19 @@ renderSidebar('admin');
 
             <!-- MIS Table Preview -->
             <?php
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+            $total_mis = $pdo->query("
+                SELECT COUNT(*) 
+                FROM users u
+                LEFT JOIN assignments a ON a.trainee_id = u.id
+                LEFT JOIN training_modules m ON a.module_id = m.id
+                LEFT JOIN refresher_training rt ON rt.trainee_id = u.id AND rt.status != 'completed'
+                WHERE u.role='trainee' AND u.status='active'
+            ")->fetchColumn();
+            $total_pages = ceil($total_mis / $limit);
+
             $misPreview = $pdo->query("
                 SELECT u.employee_id, u.full_name, u.department, u.batch_number, u.doj,
                        m.title as module_name, a.status as assign_status,
@@ -939,7 +1035,7 @@ renderSidebar('admin');
                 LEFT JOIN refresher_training rt ON rt.trainee_id = u.id AND rt.status != 'completed'
                 WHERE u.role='trainee' AND u.status='active'
                 ORDER BY u.full_name
-                LIMIT 50
+                LIMIT $limit OFFSET $offset
             ")->fetchAll(PDO::FETCH_ASSOC);
             ?>
             <table class="employee-data-table" id="misTable">
@@ -991,11 +1087,28 @@ renderSidebar('admin');
                 <?php endif; ?>
                 </tbody>
             </table>
-            <?php if (count($misPreview) >= 50): ?>
-            <div style="text-align:center; margin-top:15px; color:#64748b; font-size:0.85rem; font-weight:600;">
-                <i class="fas fa-info-circle"></i> Showing first 50 records. Download CSV for complete data.
+            <?php if ($total_pages > 1): ?>
+            <div class="pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                <?php 
+                $start_page = max(1, $page - 2);
+                $end_page = min($total_pages, $page + 2);
+                if ($start_page > 1) {
+                    echo '<a href="?type=mis&page=1" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">1</a>';
+                    if ($start_page > 2) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                }
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                    <a href="?type=mis&page=<?php echo $i; ?>" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; <?php echo $i == $page ? 'background: #0F172A; color: white;' : 'background: white; color: #0F172A; border: 1px solid #E2E8F0;'; ?>"><?php echo $i; ?></a>
+                <?php endfor; 
+                if ($end_page < $total_pages) {
+                    if ($end_page < $total_pages - 1) echo '<span style="padding: 8px; color: #64748B; font-weight: 700;">...</span>';
+                    echo '<a href="?type=mis&page='.$total_pages.'" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; background: white; color: #0F172A; border: 1px solid #E2E8F0;">'.$total_pages.'</a>';
+                }
+                ?>
             </div>
             <?php endif; ?>
+            <div style="text-align:center; margin-top:15px; color:#64748b; font-size:0.85rem; font-weight:600;">
+                <i class="fas fa-info-circle"></i> Download CSV for complete data export.
+            </div>
 
             <div class="report-footer" style="margin-top:30px;">
                 <div>Confidential - Internal Use Only</div>
@@ -1011,137 +1124,27 @@ renderSidebar('admin');
 <script>
 function togglePrintPreview() {
     document.body.classList.toggle('preview-mode-active');
-    
-    // If we just enabled preview, offer to trigger print
     if (document.body.classList.contains('preview-mode-active')) {
         Swal.fire({
             title: 'Print Preview Active',
-            text: 'You can now see exactly how the report will be aligned. Press Ctrl+P or use the Print button below to save as PDF.',
+            text: 'Press Ctrl+P to print or use the Print button.',
             icon: 'info',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-print"></i> Open Print Dialog',
             cancelButtonText: 'Just Preview',
             confirmButtonColor: '#0F172A'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.print();
-            }
-        });
+        }).then((result) => { if (result.isConfirmed) window.print(); });
     }
 }
+
 function downloadPDF() {
-    const element = document.getElementById('report-content');
-    const container = element.querySelector('.dashboard-container');
-    const sidebar = document.querySelector('.sidebar');
-    const header = document.querySelector('.header');
-    const mainContent = document.querySelector('.main-content');
-    
-    const isEmployeeReport = <?php echo $report_type == 'employee' || $report_type == 'completion' || $report_type == 'performance' || $report_type == 'feedback' ? 'true' : 'false'; ?>;
-    
-    const btn = event.currentTarget || document.querySelector('button[onclick="exportReport()"]');
-    const origText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-
-    // Save Original States
-    const originalStyles = {
-        sidebarDisplay: sidebar ? sidebar.style.display : '',
-        headerDisplay: header ? header.style.display : '',
-        mainMargin: mainContent ? mainContent.style.marginLeft : '',
-        mainPadding: mainContent ? mainContent.style.padding : '',
-        elementWidth: element.style.width
-    };
-
-    const targetWidth = isEmployeeReport ? 800 : 1100;
-
-    // Temporary Clean Slate for Capture
-    if (sidebar) sidebar.style.display = 'none';
-    if (header) header.style.display = 'none';
-    if (mainContent) {
-        mainContent.style.marginLeft = '0';
-        mainContent.style.padding = '0';
-    }
-    element.style.width = targetWidth + 'px';
-    
-    if (container) {
-        container.classList.add('pdf-export-mode');
-        if (isEmployeeReport) {
-            container.classList.add('pdf-export-mode-portrait');
-        }
-    }
-    
-    // Shift view to top for consistent capture
-    window.scrollTo(0, 0);
-
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Capturing...';
-        
-        const rect = element.getBoundingClientRect();
-
-        const opt = {
-            margin:       [0.3, 0.3, 0.3, 0.3],
-            filename:     'OTR_Analytical_Report.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true, 
-                width: rect.width,
-                height: rect.height + 20, // Add buffer for legends/borders
-                windowWidth: rect.width,
-                x: rect.left,
-                y: rect.top,
-                logging: false, 
-                allowTaint: true 
-            },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: isEmployeeReport ? 'portrait' : 'landscape' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            // Restore Original States
-            if (sidebar) sidebar.style.display = originalStyles.sidebarDisplay;
-            if (header) header.style.display = originalStyles.headerDisplay;
-            if (mainContent) {
-                mainContent.style.marginLeft = originalStyles.mainMargin;
-                mainContent.style.padding = originalStyles.mainPadding;
-            }
-            element.style.width = originalStyles.elementWidth;
-            
-            if (container) {
-                container.classList.remove('pdf-export-mode');
-                container.classList.remove('pdf-export-mode-portrait');
-            }
-            
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> Downloaded!';
-            btn.style.background = 'linear-gradient(135deg, #059669, #10B981)';
-            setTimeout(() => {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.background = 'linear-gradient(135deg, #0F172A, #334155)';
-            }, 2000);
-        }).catch((err) => {
-            console.error('PDF Export Error:', err);
-            if (sidebar) sidebar.style.display = originalStyles.sidebarDisplay;
-            if (header) header.style.display = originalStyles.headerDisplay;
-            if (mainContent) {
-                mainContent.style.marginLeft = originalStyles.mainMargin;
-                mainContent.style.padding = originalStyles.mainPadding;
-            }
-            element.style.width = originalStyles.elementWidth;
-            
-            if (container) {
-                container.classList.remove('pdf-export-mode');
-                container.classList.remove('pdf-export-mode-portrait');
-            }
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry';
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            setTimeout(() => { btn.innerHTML = origText; }, 3000);
-        });
-    }, 700); 
+    const type = new URLSearchParams(window.location.search).get('type') || 'overview';
+    const empId = new URLSearchParams(window.location.search).get('emp_id') || '';
+    let url = `<?php echo BASE_URL; ?>admin/pdf_report.php?type=${type}`;
+    if (empId) url += `&emp_id=${encodeURIComponent(empId)}`;
+    window.open(url, '_blank');
 }
 </script>
 
 <?php renderFooter(); ?>
+

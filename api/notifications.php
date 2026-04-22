@@ -11,6 +11,8 @@ if (!isLoggedIn()) {
 }
 
 $user_id = $_SESSION['user_id'];
+session_write_close(); // Release session lock early to prevent blocking page loads
+
 $action = $_GET['action'] ?? 'list';
 
 switch ($action) {
