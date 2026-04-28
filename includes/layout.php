@@ -300,19 +300,20 @@ function renderSidebar($role) {
 
                 <!-- Language Selector -->
                 <div class="notif-dropdown-wrap">
-                    <button class="icon-btn" onclick="toggleLangMenu()" title="<?php echo __('switch_language'); ?>">
+                    <button class="icon-btn" onclick="toggleLangMenu()" title="<?php echo __('switch_language'); ?>" style="width: auto; padding: 0 12px; border-radius: 20px; display: flex; gap: 8px; background: rgba(11,112,183,0.05);">
                         <i class="fas fa-language"></i>
+                        <span class="notranslate" style="font-size: 0.82rem; font-weight: 700; color: var(--primary-blue);">{<?php echo getCurrentLangName(); ?>}</span>
                     </button>
                     <div class="notif-menu" id="langMenu" style="width: 180px;">
                         <div class="notif-header">
-                            <h4><?php echo __('switch_language'); ?></h4>
+                            <h4><?php echo __('switch_language'); ?> {<?php echo getCurrentLangName(); ?>}</h4>
                         </div>
                         <div class="notif-list">
                             <?php 
                             global $available_languages;
                             foreach ($available_languages as $code => $name): ?>
                             <a href="?lang=<?php echo $code; ?>" class="notif-item <?php echo getCurrentLang() == $code ? 'active' : ''; ?>" style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: block; font-size: 14px;">
-                                <?php echo $name; ?>
+                                <?php echo $name; ?> <span class="notranslate" style="color: var(--text-muted); font-size: 0.8rem; margin-left: 5px;">{<?php global $eng_language_names; echo $eng_language_names[$code]; ?>}</span>
                                 <?php if (getCurrentLang() == $code): ?>
                                     <i class="fas fa-check" style="float: right; color: var(--primary); margin-top: 3px;"></i>
                                 <?php endif; ?>

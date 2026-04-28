@@ -269,10 +269,10 @@ a { text-decoration: none; }
   overflow: hidden;
   position: relative;
 }
-.menu-item i { font-size: 1rem; width: 20px; flex-shrink: 0; transition: transform 0.22s; }
+.menu-item i { font-size: 1.1rem; width: 24px; flex-shrink: 0; transition: transform 0.22s; display: flex; align-items: center; justify-content: center; }
 .menu-item .menu-text { transition: opacity var(--transition), width var(--transition); }
 .sidebar.collapsed .menu-item .menu-text { opacity:0; width:0; overflow:hidden; }
-.sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+.sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; gap: 0; }
 .menu-item:hover { background: var(--sidebar-hover); color: var(--brand-sky); }
 .menu-item:hover i { transform: translateX(3px); }
 .sidebar.collapsed .menu-item:hover i { transform: scale(1.2); }
@@ -432,6 +432,7 @@ html, body { overflow-x: hidden; width: 100%; position: relative; }
   transition: all 0.2s ease;
   position: relative;
   font-size: 1.05rem;
+  line-height: 1;
 }
 .icon-btn:hover { background: rgba(14, 165, 233, 0.08); color: var(--primary-blue); transform: translateY(-2px); }
 
@@ -554,7 +555,7 @@ html, body { overflow-x: hidden; width: 100%; position: relative; }
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; flex-shrink:0;
 }
-.user-avatar i { color:white; font-size:1.1rem; }
+.user-avatar i { color:white; font-size:1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .user-avatar img { width:100%; height:100%; object-fit:cover; }
 
 /* ── Dashboard Cards ──────────────────────────────────────── */

@@ -82,12 +82,12 @@ $resendSecsLeft = max(0, 60 - (time() - $otpSentAt));
 <div class="login-lang-switch">
     <button class="lang-btn" onclick="event.stopPropagation(); document.getElementById('loginLangMenu').classList.toggle('open')">
         <i class="fas fa-language" style="font-size:1.2rem;color:var(--primary);"></i>
-        <span><?php echo __('switch_language'); ?></span>
+        <span><?php echo __('switch_language'); ?> <span class="notranslate" style="opacity: 0.8;">{<?php echo getCurrentLangName(); ?>}</span></span>
     </button>
     <div class="lang-dropdown" id="loginLangMenu">
         <?php global $available_languages; foreach ($available_languages as $code => $name): ?>
         <a href="?lang=<?php echo $code; ?>" class="lang-item <?php echo getCurrentLang() == $code ? 'active' : ''; ?>">
-            <?php echo $name; ?>
+            <?php echo $name; ?> <span class="notranslate" style="color:#94a3b8; font-size:0.85rem; margin-left:4px;">{<?php global $eng_language_names; echo $eng_language_names[$code]; ?>}</span>
             <?php if (getCurrentLang() == $code): ?><i class="fas fa-check" style="float:right;margin-top:3px;"></i><?php endif; ?>
         </a>
         <?php endforeach; ?>

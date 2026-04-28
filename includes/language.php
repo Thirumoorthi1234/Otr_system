@@ -4,11 +4,20 @@
 // Define available languages
 $available_languages = [
     'en' => 'English',
-    'hi' => 'हिन्दी (Hindi)',
-    'ta' => 'தமிழ் (Tamil)',
-    'kn' => 'ಕನ್ನಡ (Kannada)',
-    'te' => 'తెలుగు (Telugu)',
-    'ml' => 'മലയാളം (Malayalam)'
+    'hi' => 'हिन्दी',
+    'ta' => 'தமிழ்',
+    'kn' => 'ಕನ್ನಡ',
+    'te' => 'తెలుగు',
+    'ml' => 'മലയാളം'
+];
+
+$eng_language_names = [
+    'en' => 'English',
+    'hi' => 'Hindi',
+    'ta' => 'Tamil',
+    'kn' => 'Kannada',
+    'te' => 'Telugu',
+    'ml' => 'Malayalam'
 ];
 
 // Handle language switch
@@ -36,7 +45,7 @@ if (isset($_GET['lang']) && array_key_exists($_GET['lang'], $available_languages
     
     header("Location: $url");
     exit();
-}
+} 
 
 // Set default language
 if (!isset($_SESSION['lang'])) {
@@ -88,5 +97,22 @@ function getLangFont() {
         case 'ml': return "'Noto Sans Malayalam', sans-serif";
         default: return "'Outfit', 'Inter', sans-serif";
     }
+}
+
+/**
+ * Get the current language name in English
+ * @return string
+ */
+function getCurrentLangName() {
+    $lang = getCurrentLang();
+    $names = [
+        'en' => 'English',
+        'hi' => 'Hindi',
+        'ta' => 'Tamil',
+        'kn' => 'Kannada',
+        'te' => 'Telugu',
+        'ml' => 'Malayalam'
+    ];
+    return $names[$lang] ?? 'English';
 }
 ?>
