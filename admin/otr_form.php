@@ -178,7 +178,7 @@ $checklist = $stmt->fetchAll();
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn">Print Form</a>
-    <a href="induction_records.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #4A5568;">Back</a>
+    <a href="javascript:history.back()" class="btn" style="background: #4A5568;">Back</a>
 </div>
 
 <div class="paper">

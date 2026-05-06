@@ -98,7 +98,7 @@ renderSidebar('trainer');
             </p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="trainees.php" class="btn" style="background:#edf2f7; color: #4A5568;">Back to List</a>
+            <a href="javascript:history.back()" class="btn" style="background:#edf2f7; color: #4A5568;">Back</a>
         </div>
     </div>
 </div>
@@ -150,7 +150,7 @@ renderSidebar('trainer');
                 <label class="form-label">Training Type</label>
                 <select name="type" class="form-control" required>
                     <option value="sdc">Practical (SDC)</option>
-                    <option value="otj">OTJ (Shop Floor)</option>
+                    <option value="ojt">OJT (Shop Floor)</option>
                     <option value="recertification">Recertification</option>
                 </select>
             </div>

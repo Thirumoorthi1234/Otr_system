@@ -45,11 +45,11 @@ renderSidebar('admin');
         </div>
         <?php if ($action == 'list'): ?>
             <div>
-                <a href="exams.php" class="btn" style="background: #4A5568; color: white;">Back to Exams</a>
+                <a href="exams.php" class="btn" style="background: #4A5568; color: white;">Back</a>
                 <a href="questions.php?exam_id=<?php echo $exam_id; ?>&action=add" class="btn btn-primary">Add Question</a>
             </div>
         <?php else: ?>
-            <a href="questions.php?exam_id=<?php echo $exam_id; ?>" class="btn" style="background: #4A5568; color: white;">Back to List</a>
+            <a href="javascript:history.back()" class="btn" style="background: #4A5568; color: white;">Back</a>
         <?php endif; ?>
     </div>
 

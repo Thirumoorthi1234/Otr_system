@@ -39,7 +39,7 @@ $efficiencyData = $pdo->query("
            a.status, a.assigned_date, a.completion_date,
            m.title as module_name, tr.full_name as trainer_name,
            ROUND(AVG(er.score), 1) as avg_score,
-           (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type = 'otj') as otj_hours,
+           (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type = 'ojt') as ojt_hours,
            (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id) as total_hours
     FROM assignments a
     JOIN users u ON a.trainee_id = u.id
@@ -165,7 +165,7 @@ renderSidebar('management');
                     <th>Module</th>
                     <th>Trainer</th>
                     <th>Training Efficiency</th>
-                    <th>OTJ Efficiency</th>
+                    <th>OJT Efficiency</th>
                     <th>Completed</th>
                 </tr>
             </thead>
@@ -178,12 +178,12 @@ renderSidebar('management');
                     elseif ($training_eff >= 60) { $tClass = 'average'; $tLabel = 'Average'; }
                     else { $tClass = 'low'; $tLabel = 'Needs Improvement'; }
                     
-                    // OTJ Efficiency: ratio of OTJ hours to total hours
-                    $otj_eff = $eff['total_hours'] > 0 ? round(($eff['otj_hours'] / $eff['total_hours']) * 100) : 0;
-                    if ($otj_eff >= 50) { $oClass = 'excellent'; $oLabel = 'Strong'; }
-                    elseif ($otj_eff >= 30) { $oClass = 'good'; $oLabel = 'Good'; }
-                    elseif ($otj_eff > 0) { $oClass = 'average'; $oLabel = 'Moderate'; }
-                    else { $oClass = 'low'; $oLabel = 'No OTJ'; }
+                    // OJT Efficiency: ratio of OJT hours to total hours
+                    $ojt_eff = $eff['total_hours'] > 0 ? round(($eff['ojt_hours'] / $eff['total_hours']) * 100) : 0;
+                    if ($ojt_eff >= 50) { $oClass = 'excellent'; $oLabel = 'Strong'; }
+                    elseif ($ojt_eff >= 30) { $oClass = 'good'; $oLabel = 'Good'; }
+                    elseif ($ojt_eff > 0) { $oClass = 'average'; $oLabel = 'Moderate'; }
+                    else { $oClass = 'low'; $oLabel = 'No OJT'; }
                 ?>
                 <tr>
                     <td><strong><?php echo e($eff['full_name']); ?></strong><br><span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo e($eff['employee_id']); ?></span></td>
@@ -196,9 +196,9 @@ renderSidebar('management');
                     </td>
                     <td>
                         <span class="efficiency-badge <?php echo $oClass; ?>">
-                            <i class="fas fa-industry"></i> <?php echo $otj_eff; ?>% – <?php echo $oLabel; ?>
+                            <i class="fas fa-industry"></i> <?php echo $ojt_eff; ?>% – <?php echo $oLabel; ?>
                         </span>
-                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px;"><?php echo $eff['otj_hours']; ?>h OTJ / <?php echo $eff['total_hours']; ?>h total</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px;"><?php echo $eff['ojt_hours']; ?>h OJT / <?php echo $eff['total_hours']; ?>h total</div>
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">
                         <?php echo $eff['completion_date'] ? date('d M Y', strtotime($eff['completion_date'])) : '-'; ?>

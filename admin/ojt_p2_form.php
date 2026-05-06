@@ -1,5 +1,5 @@
 <?php
-// admin/otj_p2_form.php
+// admin/ojt_p2_form.php
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
 
@@ -20,16 +20,16 @@ $assignment = $stmt->fetch();
 
 if (!$assignment) die("Assignment not found.");
 
-// Fetch OTJ Stages (21-40)
-$stmt = $pdo->prepare("SELECT s.*, u.full_name as trainer_name FROM training_stages s LEFT JOIN users u ON s.trainer_id = u.id WHERE s.assignment_id = ? AND s.type = 'otj' ORDER BY s.certified_date ASC LIMIT 20 OFFSET 20");
+// Fetch OJT Stages (21-40)
+$stmt = $pdo->prepare("SELECT s.*, u.full_name as trainer_name FROM training_stages s LEFT JOIN users u ON s.trainer_id = u.id WHERE s.assignment_id = ? AND s.type = 'ojt' ORDER BY s.certified_date ASC LIMIT 20 OFFSET 20");
 $stmt->execute([$assignment_id]);
-$otj_stages = $stmt->fetchAll();
+$ojt_stages = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OTJ TRAINING PAGE 2 | <?php echo e($assignment['trainee_name']); ?></title>
+    <title>OJT TRAINING PAGE 2 | <?php echo e($assignment['trainee_name']); ?></title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: #f4f4f4; }
         .paper { width: 210mm; min-height: 297mm; padding: 15mm; margin: auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; position: relative; }
@@ -64,7 +64,7 @@ $otj_stages = $stmt->fetchAll();
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn">Print</a>
-    <a href="training_hub.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: #4A5568;">Back</a>
+    <a href="javascript:history.back()" class="btn" style="background: #4A5568;">Back</a>
 </div>
 
 <div class="paper">
@@ -97,7 +97,7 @@ $otj_stages = $stmt->fetchAll();
         <tbody>
             <?php 
             for($i=21; $i<=40; $i++): 
-                $st = $otj_stages[$i-21] ?? null;
+                $st = $ojt_stages[$i-21] ?? null;
             ?>
             <tr>
                 <td class="sno"><?php echo $i; ?></td>

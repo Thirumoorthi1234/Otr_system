@@ -69,11 +69,11 @@ CREATE TABLE IF NOT EXISTS assignments (
     FOREIGN KEY (module_id) REFERENCES training_modules(id) ON DELETE CASCADE
 );
 
--- OTJ Training Stages (Shop floor training)
+-- OJT Training Stages (Shop floor training)
 CREATE TABLE IF NOT EXISTS training_stages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     assignment_id INT NOT NULL,
-    type ENUM('sdc', 'otj', 'recertification') DEFAULT 'sdc',
+    type ENUM('sdc', 'ojt', 'recertification') DEFAULT 'sdc',
     stage_name VARCHAR(100),
     man_hours DECIMAL(5,2),
     certified_date DATE,

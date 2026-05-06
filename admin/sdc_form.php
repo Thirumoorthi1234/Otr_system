@@ -71,7 +71,7 @@ $recert_stages = $stmt->fetchAll();
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn">Print</a>
-    <a href="training_hub.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: #4A5568;">Back</a>
+    <a href="javascript:history.back()" class="btn" style="background: #4A5568;">Back</a>
 </div>
 
 <div class="paper">

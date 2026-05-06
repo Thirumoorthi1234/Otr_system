@@ -66,7 +66,7 @@ renderSidebar('trainer');
         <?php if ($action == 'list'): ?>
             <a href="questions.php?action=add_topic" class="btn btn-primary" style="font-size: 0.85rem;"><i class="fas fa-plus" style="margin-right: 8px;"></i>Add Topic</a>
         <?php else: ?>
-            <a href="questions.php" class="btn" style="background: #4A5568; color: white;">Back</a>
+            <a href="javascript:history.back()" class="btn" style="background: #4A5568; color: white;">Back</a>
         <?php endif; ?>
     </div>
 

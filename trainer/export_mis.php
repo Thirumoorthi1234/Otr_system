@@ -30,7 +30,7 @@ fputcsv($output, [
     'Induction Progress (%)',
     'Exam Score (%)',
     'Exam Status',
-    'OTJ Stages Completed',
+    'OJT Stages Completed',
     'Total Man Hours'
 ]);
 
@@ -71,10 +71,10 @@ foreach ($trainees as $t) {
     $stmt_ex->execute([$t['trainee_id'], $t['assignment_id']]);
     $exam = $stmt_ex->fetch();
     
-    // 3. OTJ Stages & Hours
-    $stmt_otj = $pdo->prepare("SELECT COUNT(*) AS stage_count, SUM(man_hours) AS total_hours FROM training_stages WHERE assignment_id = ?");
-    $stmt_otj->execute([$t['assignment_id']]);
-    $otj = $stmt_otj->fetch();
+    // 3. OJT Stages & Hours
+    $stmt_ojt = $pdo->prepare("SELECT COUNT(*) AS stage_count, SUM(man_hours) AS total_hours FROM training_stages WHERE assignment_id = ?");
+    $stmt_ojt->execute([$t['assignment_id']]);
+    $ojt = $stmt_ojt->fetch();
 
     fputcsv($output, [
         $t['full_name'],
@@ -89,8 +89,8 @@ foreach ($trainees as $t) {
         $ind_percent . '%',
         ($exam ? $exam['score'] : '-') . '%',
         $exam ? ucfirst($exam['status']) : '-',
-        $otj['stage_count'] ?: 0,
-        $otj['total_hours'] ?: 0
+        $ojt['stage_count'] ?: 0,
+        $ojt['total_hours'] ?: 0
     ]);
 }
 

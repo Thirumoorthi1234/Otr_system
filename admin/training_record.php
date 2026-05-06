@@ -184,11 +184,7 @@ $indu_percent = $indu_total > 0 ? round(($indu_done / $indu_total) * 100) : 0;
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn"><i class="fas fa-print"></i></a>
-    <?php if ($assignment_id): ?>
-        <a href="<?php echo ($_SESSION['role'] == 'admin') ? 'training_hub.php?id='.$assignment_id : '../trainer/progress.php?assignment_id='.$assignment_id; ?>" class="btn" style="background:#555"><i class="fas fa-arrow-left"></i> Back to Hub</a>
-    <?php else: ?>
-        <a href="induction_records.php" class="btn" style="background:#555"><i class="fas fa-arrow-left"></i> Back to Records</a>
-    <?php endif; ?>
+    <a href="javascript:history.back()" class="btn" style="background:#555"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 
 <div class="report-page">

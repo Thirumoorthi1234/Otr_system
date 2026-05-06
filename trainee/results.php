@@ -54,7 +54,10 @@ renderSidebar('trainee');
         <?php if ($result['status'] == 'pass'): ?>
             <!-- CERTIFICATE VIEW -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <div style="text-align: right; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <a href="javascript:history.back()" class="btn" style="background: #4A5568; color: white; padding: 10px 24px; font-weight: 700; border-radius: 8px;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
                 <button onclick="downloadCertificate()" id="downloadCertBtn" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 24px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer;">
                     <i class="fas fa-file-pdf"></i> Download Certificate
                 </button>
@@ -208,6 +211,11 @@ renderSidebar('trainee');
             
         <?php else: ?>
             <!-- FAILED EXAM VIEW -->
+            <div style="text-align: left; margin-bottom: 20px;">
+                <a href="javascript:history.back()" class="btn" style="background: #4A5568; color: white; padding: 10px 24px; font-weight: 700; border-radius: 8px;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
             <div style="text-align: center; padding: 40px;">
                 <div style="font-size: 5rem; color: var(--danger); margin-bottom: 20px;">
                     <i class="fas fa-times-circle"></i>

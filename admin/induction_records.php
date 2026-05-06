@@ -97,7 +97,7 @@ renderSidebar($_SESSION['role']);
             $stmt->execute([$trainee_id]);
             $t_info = $stmt->fetch();
 
-            // Fetch the trainee's latest assignment for OTJ/SDC forms
+            // Fetch the trainee's latest assignment for OJT/SDC forms
             $stmt = $pdo->prepare("SELECT id FROM assignments WHERE trainee_id = ? ORDER BY assigned_date DESC LIMIT 1");
             $stmt->execute([$trainee_id]);
             $latest_assignment = $stmt->fetch();
@@ -109,16 +109,16 @@ renderSidebar($_SESSION['role']);
                     <p style="font-size: 0.85rem; color: var(--text-muted);"><?php echo e($t_info['employee_id']); ?> | <?php echo e($t_info['department']); ?></p>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="otr_form.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: var(--primary-blue); color: white; font-size: 0.85rem;"><i class="fas fa-file-invoice"></i> <?php echo __('Cover'); ?></a>
-                    <a href="induction_p2_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P2'); ?></a>
-                    <a href="induction_p3_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P3'); ?></a>
+                    <a href="otr_form.php?tid=<?php echo $trainee_id; ?>" class="btn" style="background: var(--primary-blue); color: white; font-size: 0.85rem;"><i class="fas fa-file-invoice"></i> <?php echo __('Cover'); ?></a>
+                    <a href="induction_p2_view.php?tid=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P2'); ?></a>
+                    <a href="induction_p3_view.php?tid=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-file-alt"></i> <?php echo __('P3'); ?></a>
                     <?php if ($assignment_id): ?>
-                        <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-tools"></i> <?php echo __('SDC'); ?></a>
-                        <a href="otj_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OTJ P1'); ?></a>
-                        <a href="otj_p2_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OTJ P2'); ?></a>
+                        <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-tools"></i> <?php echo __('SDC'); ?></a>
+                        <a href="ojt_form.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OJT P1'); ?></a>
+                        <a href="ojt_p2_form.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: #edf2f7; color: #38a169; font-size: 0.85rem;"><i class="fas fa-industry"></i> <?php echo __('OJT P2'); ?></a>
                     <?php endif; ?>
-                    <a href="score_sheet_entry.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: #805AD5; font-size: 0.85rem;"><i class="fas fa-star"></i> <?php echo __('Score'); ?></a>
-                    <a href="feedback_view.php?tid=<?php echo $trainee_id; ?>" target="_blank" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-comment-dots"></i> <?php echo __('Feedback'); ?></a>
+                    <a href="score_sheet_entry.php?tid=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: #805AD5; font-size: 0.85rem;"><i class="fas fa-star"></i> <?php echo __('Score'); ?></a>
+                    <a href="feedback_view.php?tid=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: var(--primary-blue); font-size: 0.85rem;"><i class="fas fa-comment-dots"></i> <?php echo __('Feedback'); ?></a>
                     <a href="../<?php echo $_SESSION['role']; ?>/dashboard.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #edf2f7; color: #4A5568; font-size: 0.85rem;"><i class="fas fa-chart-line"></i> <?php echo __('Dashboard'); ?></a>
                 </div>
             </div>

@@ -27,7 +27,7 @@ if ($report_type == 'mis' && isset($_GET['download_csv'])) {
                (SELECT status FROM exam_results er2 JOIN exams e2 ON er2.exam_id = e2.id WHERE er2.trainee_id = u.id AND e2.module_id = a.module_id ORDER BY er2.id DESC LIMIT 1) as exam_result,
                (SELECT COUNT(*) FROM trainee_checklist_progress tcp WHERE tcp.trainee_id = u.id) as ind_done,
                (SELECT COUNT(*) FROM induction_checklist) as ind_total,
-               (SELECT COUNT(*) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type='otj') as otj_count,
+               (SELECT COUNT(*) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type='ojt') as ojt_count,
                rt.due_date as refresher_due, rt.status as refresher_status
         FROM users u
         LEFT JOIN assignments a ON a.trainee_id = u.id
@@ -44,7 +44,7 @@ if ($report_type == 'mis' && isset($_GET['download_csv'])) {
             $r['exam_score'] !== null ? $r['exam_score'] . '%' : 'N/A',
             $r['exam_result'] ?? 'N/A',
             $r['ind_done'], $r['ind_total'],
-            $r['otj_count'] ?? 0,
+            $r['ojt_count'] ?? 0,
             $r['refresher_due'] ?? 'None', $r['refresher_status'] ?? 'N/A'
         ]);
     }

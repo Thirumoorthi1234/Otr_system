@@ -15,7 +15,7 @@ $trainees = $pdo->prepare("
            SUM(CASE WHEN er.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
            MAX(er.score) as best_score,
            MIN(er.score) as worst_score,
-           (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type = 'otj') as otj_hours,
+           (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id AND ts.type = 'ojt') as ojt_hours,
            (SELECT COALESCE(SUM(ts.man_hours), 0) FROM training_stages ts WHERE ts.assignment_id = a.id) as total_hours
     FROM users u
     JOIN assignments a ON a.trainee_id = u.id
@@ -215,9 +215,9 @@ renderSidebar('trainer');
             <div class="eff-chart-card">
                 <div class="eff-chart-title">
                     <i class="fas fa-industry" style="color: #F59E0B;"></i>
-                    OTJ Hours Distribution
+                    OJT Hours Distribution
                 </div>
-                <div class="eff-chart-wrap"><canvas id="otjChart"></canvas></div>
+                <div class="eff-chart-wrap"><canvas id="ojtChart"></canvas></div>
             </div>
         </div>
         
@@ -286,19 +286,19 @@ renderSidebar('trainer');
             options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: window.innerWidth < 1200 ? 'bottom' : 'right', labels: { usePointStyle: true, font: { weight: '600', size: 12 } } } } }
         });
         
-        // OTJ Hours Bar
+        // OJT Hours Bar
         <?php
-        $otjTrainees = array_filter($traineeList, fn($t) => $t['total_hours'] > 0);
-        $otjNames = array_column(array_slice($otjTrainees, 0, 8), 'full_name');
-        $otjHrs = array_map('floatval', array_column(array_slice($otjTrainees, 0, 8), 'otj_hours'));
-        $totalHrs = array_map('floatval', array_column(array_slice($otjTrainees, 0, 8), 'total_hours'));
+        $ojtTrainees = array_filter($traineeList, fn($t) => $t['total_hours'] > 0);
+        $ojtNames = array_column(array_slice($ojtTrainees, 0, 8), 'full_name');
+        $ojtHrs = array_map('floatval', array_column(array_slice($ojtTrainees, 0, 8), 'ojt_hours'));
+        $totalHrs = array_map('floatval', array_column(array_slice($ojtTrainees, 0, 8), 'total_hours'));
         ?>
-        new Chart(document.getElementById('otjChart'), {
+        new Chart(document.getElementById('ojtChart'), {
             type: 'bar',
             data: {
-                labels: <?php echo json_encode($otjNames ?: ['No Data']); ?>,
+                labels: <?php echo json_encode($ojtNames ?: ['No Data']); ?>,
                 datasets: [
-                    { label: 'OTJ Hours', data: <?php echo json_encode($otjHrs ?: [0]); ?>, backgroundColor: '#F59E0B', borderRadius: 8, barPercentage: 0.5 },
+                    { label: 'OJT Hours', data: <?php echo json_encode($ojtHrs ?: [0]); ?>, backgroundColor: '#F59E0B', borderRadius: 8, barPercentage: 0.5 },
                     { label: 'Total Hours', data: <?php echo json_encode($totalHrs ?: [0]); ?>, backgroundColor: '#E2E8F0', borderRadius: 8, barPercentage: 0.5 }
                 ]
             },
@@ -323,7 +323,7 @@ renderSidebar('trainer');
                             <th>Status</th>
                             <th>Avg Score</th>
                             <th>Pass Rate</th>
-                            <th>OTJ Efficiency</th>
+                            <th>OJT Efficiency</th>
                             <th>Training Efficiency</th>
                             <th>Overall Effectiveness</th>
                         </tr>
@@ -332,7 +332,7 @@ renderSidebar('trainer');
                         <?php foreach ($traineeList as $i => $t): 
                             $passRate = $t['exam_count'] > 0 ? round(($t['pass_count'] / $t['exam_count']) * 100) : 0;
                             $avgScore = $t['avg_score'] ?? 0;
-                            $otjEff = $t['total_hours'] > 0 ? round(($t['otj_hours'] / $t['total_hours']) * 100) : 0;
+                            $ojtEff = $t['total_hours'] > 0 ? round(($t['ojt_hours'] / $t['total_hours']) * 100) : 0;
                             
                             // Training Efficiency
                             $trainingEff = $avgScore;
@@ -341,14 +341,14 @@ renderSidebar('trainer');
                             elseif ($trainingEff >= 40) { $tClass = 'eff-badge-yellow'; }
                             else { $tClass = $t['exam_count'] > 0 ? 'eff-badge-red' : 'eff-badge-yellow'; }
                             
-                            // OTJ Efficiency display
-                            if ($otjEff >= 50) { $oClass = 'eff-badge-green'; $oLabel = 'Strong'; }
-                            elseif ($otjEff >= 30) { $oClass = 'eff-badge-blue'; $oLabel = 'Good'; }
-                            elseif ($otjEff > 0) { $oClass = 'eff-badge-yellow'; $oLabel = 'Moderate'; }
-                            else { $oClass = 'eff-badge-yellow'; $oLabel = 'No OTJ'; }
+                            // OJT Efficiency display
+                            if ($ojtEff >= 50) { $oClass = 'eff-badge-green'; $oLabel = 'Strong'; }
+                            elseif ($ojtEff >= 30) { $oClass = 'eff-badge-blue'; $oLabel = 'Good'; }
+                            elseif ($ojtEff > 0) { $oClass = 'eff-badge-yellow'; $oLabel = 'Moderate'; }
+                            else { $oClass = 'eff-badge-yellow'; $oLabel = 'No OJT'; }
                             
                             // Overall Effectiveness
-                            $effectiveness = $t['exam_count'] > 0 ? round(($passRate * 0.4) + ($avgScore * 0.4) + ($otjEff * 0.2)) : 0;
+                            $effectiveness = $t['exam_count'] > 0 ? round(($passRate * 0.4) + ($avgScore * 0.4) + ($ojtEff * 0.2)) : 0;
                             if ($effectiveness >= 75) { $effClass = 'eff-badge-green'; $effLabel = 'Excellent'; }
                             elseif ($effectiveness >= 55) { $effClass = 'eff-badge-blue'; $effLabel = 'Good'; }
                             elseif ($effectiveness >= 35) { $effClass = 'eff-badge-yellow'; $effLabel = 'Average'; }
@@ -389,10 +389,10 @@ renderSidebar('trainer');
                             </td>
                             <td>
                                 <span class="eff-badge <?php echo $oClass; ?>">
-                                    <i class="fas fa-industry"></i> <?php echo $otjEff; ?>% – <?php echo $oLabel; ?>
+                                    <i class="fas fa-industry"></i> <?php echo $ojtEff; ?>% – <?php echo $oLabel; ?>
                                 </span>
                                 <?php if ($t['total_hours'] > 0): ?>
-                                <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;"><?php echo $t['otj_hours']; ?>h / <?php echo $t['total_hours']; ?>h</div>
+                                <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;"><?php echo $t['ojt_hours']; ?>h / <?php echo $t['total_hours']; ?>h</div>
                                 <?php endif; ?>
                             </td>
                             <td>

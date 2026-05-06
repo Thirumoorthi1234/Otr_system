@@ -79,7 +79,7 @@ if (!$assignment) die(__("Assignment not found."));
 $message = '';
 $edit_stage = null;
 
-// Handle CRUD Operations for Practical/OTJ Stages
+// Handle CRUD Operations for Practical/OJT Stages
 if (isset($_POST['save_stage'])) {
     $stage_id = $_POST['stage_id'] ?? null;
     $type = $_POST['type'] ?? 'sdc';
@@ -143,16 +143,16 @@ renderSidebar($_SESSION['role']);
             </p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: var(--primary-blue); color: white;">
-                <i class="fas fa-print"></i> <?php echo __('Page 4 (SDC)'); ?>
+            <a href="sdc_form.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: var(--primary-blue); color: white;">
+                <i class="fas fa-tools"></i> <?php echo __('SDC Form'); ?>
             </a>
-            <a href="otj_form.php?id=<?php echo $assignment_id; ?>" target="_blank" class="btn" style="background: var(--primary-blue); color: white;">
-                <i class="fas fa-print"></i> <?php echo __('Page 5 (OTJ)'); ?>
+            <a href="ojt_form.php?id=<?php echo $assignment_id; ?>" class="btn" style="background: var(--primary-blue); color: white;">
+                <i class="fas fa-industry"></i> <?php echo __('OJT Form'); ?>
             </a>
-            <a href="training_record.php?type=full&id=<?php echo $assignment_id; ?>" target="_blank" class="btn btn-primary">
+            <a href="training_record.php?type=full&id=<?php echo $assignment_id; ?>" class="btn btn-primary">
                 <i class="fas fa-file-pdf"></i> <?php echo __('Full Report'); ?>
             </a>
-            <a href="<?php echo ($_SESSION['role'] == 'admin') ? 'assignments.php' : '../trainer/trainees.php'; ?>" class="btn" style="background:#eee; color:#555;"><?php echo __('Back'); ?></a>
+            <a href="javascript:history.back()" class="btn" style="background:#eee; color:#555;"><?php echo __('Back'); ?></a>
         </div>
     </div>
 </div>
@@ -165,7 +165,7 @@ renderSidebar($_SESSION['role']);
 
 <div class="grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
     
-    <!-- Practical/OTJ Stages Section -->
+    <!-- Practical/OJT Stages Section -->
     <div style="grid-column: span 2;">
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -192,7 +192,7 @@ renderSidebar($_SESSION['role']);
                         while ($st = $stmt->fetch()):
                             $type_label = [
                                 'sdc' => '<span class="badge badge-primary">' . __('Practical (SDC)') . '</span>',
-                                'otj' => '<span class="badge badge-success">' . __('OTJ (Shop Floor)') . '</span>',
+                                'ojt' => '<span class="badge badge-success">' . __('OJT (Shop Floor)') . '</span>',
                                 'recertification' => '<span class="badge badge-warning">' . __('Recertification') . '</span>'
                             ][$st['type']];
                         ?>
@@ -225,7 +225,7 @@ renderSidebar($_SESSION['role']);
                         <label class="form-label"><?php echo __('Training Type'); ?></label>
                         <select name="type" class="form-control" required>
                             <option value="sdc" <?php echo ($edit_stage && $edit_stage['type'] == 'sdc') ? 'selected' : ''; ?>><?php echo __('Practical (SDC)'); ?></option>
-                            <option value="otj" <?php echo ($edit_stage && $edit_stage['type'] == 'otj') ? 'selected' : ''; ?>><?php echo __('OTJ (Shop Floor)'); ?></option>
+                            <option value="ojt" <?php echo ($edit_stage && $edit_stage['type'] == 'ojt') ? 'selected' : ''; ?>><?php echo __('OJT (Shop Floor)'); ?></option>
                             <option value="recertification" <?php echo ($edit_stage && $edit_stage['type'] == 'recertification') ? 'selected' : ''; ?>><?php echo __('Recertification'); ?></option>
                         </select>
                     </div>

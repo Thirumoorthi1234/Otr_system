@@ -57,7 +57,7 @@ renderSidebar($_SESSION['role']);
 <div class="card" style="max-width: 800px; margin: auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <h3>Record Induction Test Scores</h3>
-        <a href="users.php" class="btn" style="background: #4A5568; color: white;">Back to Users</a>
+        <a href="javascript:history.back()" class="btn" style="background: #4A5568; color: white;">Back</a>
     </div>
 
     <?php if ($message): ?>

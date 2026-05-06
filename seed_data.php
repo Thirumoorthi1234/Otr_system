@@ -106,7 +106,7 @@ for ($b = 0; $b < 3; $b++) {
 echo "30 trainees created (3 batches x 10).\n";
 
 // ─── ASSIGNMENTS ───────────────────────────────────────────
-// Existing modules: 1 (Induction), 2 (Practical-SDC), 3 (OTJ Shop Floor)
+// Existing modules: 1 (Induction), 2 (Practical-SDC), 3 (OJT Shop Floor)
 $modules = [1, 2, 3];
 $statuses = ['completed', 'completed', 'in_progress', 'completed', 'in_progress'];
 $assignmentIds = [];
@@ -126,9 +126,9 @@ foreach ($newUserIds['trainee'] as $idx => $traineeId) {
 }
 echo count($assignmentIds) . " assignments created.\n";
 
-// ─── TRAINING STAGES (OTJ + SDC) ──────────────────────────
+// ─── TRAINING STAGES (OJT + SDC) ──────────────────────────
 $stageNames = [
-    'otj' => ['Machine Operation Basics', 'Component Identification', 'Soldering Practice', 'Assembly Line Work', 'Quality Inspection OTJ'],
+    'ojt' => ['Machine Operation Basics', 'Component Identification', 'Soldering Practice', 'Assembly Line Work', 'Quality Inspection OJT'],
     'sdc' => ['Safety Fundamentals', 'ESD Awareness', '5S Methodology', 'Lean Manufacturing', 'PPE Usage Training']
 ];
 

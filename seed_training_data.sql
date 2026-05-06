@@ -4,7 +4,7 @@
 INSERT IGNORE INTO training_modules (id, title, description, category) VALUES 
 (1, 'Induction Training', 'Foundational training covering Safety, PPE, 5S, and ESD.', 'Induction'),
 (2, 'Practical Training-SDC', 'Practical skill development center training.', 'SDC'),
-(3, 'On the job training- shop floor', 'Hands-on training on the production floor.', 'OTJ');
+(3, 'On the job training- shop floor', 'Hands-on training on the production floor.', 'OJT');
 
 -- 2. Create Exams
 INSERT IGNORE INTO exams (id, module_id, title, duration_minutes, passing_score) VALUES 

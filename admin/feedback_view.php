@@ -68,7 +68,7 @@ if ($f) {
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn">Print</a>
-    <a href="induction_records.php?trainee_id=<?php echo $trainee_id; ?>" class="btn" style="background: #4A5568;">Back</a>
+    <a href="javascript:history.back()" class="btn" style="background: #4A5568;">Back</a>
 </div>
 
 <div class="paper">

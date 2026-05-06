@@ -44,7 +44,7 @@ renderSidebar('trainer');
                 while ($row = $stmt->fetch()):
                     // Calculate efficiency for completed assignments
                     $training_eff = null;
-                    $otj_eff = null;
+                    $ojt_eff = null;
                     if ($row['status'] == 'completed') {
                         // Get average exam score for this trainee on this module
                         $escStmt = $pdo->prepare("
@@ -56,16 +56,16 @@ renderSidebar('trainer');
                         $escStmt->execute([$row['trainee_id'], $row['module_id']]);
                         $training_eff = $escStmt->fetchColumn() ?: 0;
                         
-                        // Get OTJ hours vs total hours
+                        // Get OJT hours vs total hours
                         $hrStmt = $pdo->prepare("
                             SELECT 
-                                COALESCE(SUM(CASE WHEN type = 'otj' THEN man_hours ELSE 0 END), 0) as otj_hours,
+                                COALESCE(SUM(CASE WHEN type = 'ojt' THEN man_hours ELSE 0 END), 0) as ojt_hours,
                                 COALESCE(SUM(man_hours), 0) as total_hours
                             FROM training_stages WHERE assignment_id = ?
                         ");
                         $hrStmt->execute([$row['id']]);
                         $hrs = $hrStmt->fetch();
-                        $otj_eff = $hrs['total_hours'] > 0 ? round(($hrs['otj_hours'] / $hrs['total_hours']) * 100) : 0;
+                        $ojt_eff = $hrs['total_hours'] > 0 ? round(($hrs['ojt_hours'] / $hrs['total_hours']) * 100) : 0;
                     }
                 ?>
                 <tr class="main-row" style="cursor: pointer; border-bottom: 1px solid var(--border-color); background: <?php echo $row['is_locked'] ? '#fff5f5' : 'var(--white)'; ?>; transition: background 0.2s;">
@@ -101,9 +101,9 @@ renderSidebar('trainer');
                             elseif ($training_eff >= 60) { $tClass = 'average'; }
                             else { $tClass = 'low'; }
                             
-                            if ($otj_eff >= 50) { $oClass = 'excellent'; }
-                            elseif ($otj_eff >= 30) { $oClass = 'good'; }
-                            elseif ($otj_eff > 0) { $oClass = 'average'; }
+                            if ($ojt_eff >= 50) { $oClass = 'excellent'; }
+                            elseif ($ojt_eff >= 30) { $oClass = 'good'; }
+                            elseif ($ojt_eff > 0) { $oClass = 'average'; }
                             else { $oClass = 'low'; }
                             ?>
                             <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
@@ -111,7 +111,7 @@ renderSidebar('trainer');
                                     <i class="fas fa-bolt"></i> <?php echo $training_eff; ?>%
                                 </span>
                                 <span class="efficiency-badge <?php echo $oClass; ?>" style="font-size: 0.7rem; padding: 3px 8px;">
-                                    <i class="fas fa-industry"></i> OTJ <?php echo $otj_eff; ?>%
+                                    <i class="fas fa-industry"></i> OJT <?php echo $ojt_eff; ?>%
                                 </span>
                             </div>
                         <?php else: ?>
