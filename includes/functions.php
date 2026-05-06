@@ -56,4 +56,39 @@ function addNotification($user_id, $title, $message, $type = 'info', $link = nul
     $stmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
     return $stmt->execute([$user_id, $title, $message, $type, $link]);
 }
+
+/**
+ * Generate a role-based employee ID automatically
+ */
+function generateEmployeeId($pdo, $role) {
+    $prefixes = [
+        'admin'      => 'ADM',
+        'management' => 'MGT',
+        'trainer'    => 'TRN',
+        'trainee'    => 'SGS'
+    ];
+    $prefix = $prefixes[$role] ?? 'EMP';
+    
+    // Find the latest numeric ID with this prefix
+    // We use a regex or string manipulation to find the highest number
+    $stmt = $pdo->prepare("SELECT employee_id FROM users WHERE employee_id LIKE ? ORDER BY LENGTH(employee_id) DESC, employee_id DESC LIMIT 1");
+    $stmt->execute([$prefix . '%']);
+    $lastId = $stmt->fetchColumn();
+    
+    if ($lastId) {
+        // Extract the numeric part (everything after the prefix)
+        $numPart = substr($lastId, strlen($prefix));
+        if (is_numeric($numPart)) {
+            $newNum = (int)$numPart + 1;
+        } else {
+            // Fallback if the format was different
+            $newNum = 1;
+        }
+    } else {
+        $newNum = 1;
+    }
+    
+    return $prefix . str_pad($newNum, 3, '0', STR_PAD_LEFT);
+}
+
 ?>

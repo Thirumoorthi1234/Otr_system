@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'కొత్త విభాగాన్ని జోడించండి',
     'enter_new_department_name' => 'కొత్త విభాగం పేరును నమోదు చేయండి',
     'leave_blank_to_keep_same' => 'అలాగే ఉంచడానికి ఖాళీగా వదిలేయండి',
+    'leave_blank_for_auto'    => 'Leave blank to auto-generate',
+    'e.g. SGS001 or leave blank' => 'e.g. SGS001 or leave blank',
     'module_management'     => 'మాడ్యూల్ నిర్వహణ',
     'create_training_module' => 'శిక్షణ మాడ్యూల్ సృష్టించండి',
     'edit_module'           => 'మాడ్యూల్‌ను సవరించండి',

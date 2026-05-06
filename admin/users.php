@@ -10,11 +10,16 @@ if (isset($_POST['save_user'])) {
     $username     = $_POST['username'];
     $full_name    = $_POST['full_name'];
     $role         = $_POST['role'];
-    $employee_id  = $_POST['employee_id'];
-    $qualification = $_POST['qualification'] ?? null;
-    $doj          = $_POST['doj'] ?? null;
-    $dol          = $_POST['dol'] ?? null;
-    $category     = $_POST['category'] ?? null;
+    $employee_id  = trim($_POST['employee_id'] ?? '');
+
+    // Automatically generate employee ID if empty
+    if (empty($employee_id)) {
+        $employee_id = generateEmployeeId($pdo, $role);
+    }
+    $qualification = trim($_POST['qualification'] ?? '') ?: null;
+    $doj          = trim($_POST['doj'] ?? '') ?: null;
+    $dol          = trim($_POST['dol'] ?? '') ?: null;
+    $category     = trim($_POST['category'] ?? '') ?: null;
     $batch_number = ($role == 'trainee') ? ($_POST['batch_number'] ?? null) : null;
     $mobile_number = trim($_POST['mobile_number'] ?? '') ?: null;
     $aadhar_number = preg_replace('/\D/', '', $_POST['aadhar_number'] ?? '') ?: null;
@@ -314,8 +319,8 @@ renderSidebar($_SESSION['role']);
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><?php echo __('employee_id'); ?></label>
-                    <input type="text" name="employee_id" class="form-control" value="<?php echo e($user['employee_id']); ?>">
+                    <label class="form-label"><?php echo __('employee_id'); ?> <span style="font-size: 0.7rem; color: var(--primary-blue); font-weight: normal;">(<?php echo __('leave_blank_for_auto'); ?>)</span></label>
+                    <input type="text" name="employee_id" class="form-control" value="<?php echo e($user['employee_id']); ?>" placeholder="<?php echo __('e.g. SGS001 or leave blank'); ?>">
                 </div>
                 <div class="form-group">
                     <label class="form-label"><?php echo __('password'); ?> <?php echo $action == 'edit' ? '(' . __('leave_blank_to_keep_same') . ')' : ''; ?></label>

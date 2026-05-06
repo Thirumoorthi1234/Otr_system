@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'ಹೊಸ ಇಲಾಖೆಯನ್ನು ಸೇರಿಸಿ',
     'enter_new_department_name' => 'ಹೊಸ ಇಲಾಖೆಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ',
     'leave_blank_to_keep_same' => 'ಹಾಗೆಯೇ ಇರಿಸಲು ಖಾಲಿ ಬಿಡಿ',
+    'leave_blank_for_auto'    => 'Leave blank to auto-generate',
+    'e.g. SGS001 or leave blank' => 'e.g. SGS001 or leave blank',
     'module_management'     => 'ಮಾಡ್ಯೂಲ್ ನಿರ್ವಹಣೆ',
     'create_training_module' => 'ತರಬೇತಿ ಮಾಡ್ಯೂಲ್ ರಚಿಸಿ',
     'edit_module'           => 'ಮಾಡ್ಯೂಲ್ ಸಂಪಾದಿಸಿ',

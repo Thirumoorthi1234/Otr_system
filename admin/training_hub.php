@@ -1,3 +1,4 @@
+
 <?php
 // admin/training_hub.php
 require_once '../includes/layout.php';
@@ -85,7 +86,7 @@ if (isset($_POST['save_stage'])) {
     $type = $_POST['type'] ?? 'sdc';
     $stage_name = $_POST['stage_name'];
     $man_hours = $_POST['man_hours'];
-    $date = $_POST['certified_date'];
+    $date = trim($_POST['certified_date'] ?? '') ?: null;
     $remarks = $_POST['remarks'];
     
     if ($stage_id) {

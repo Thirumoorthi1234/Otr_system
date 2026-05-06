@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'புதிய துறையைச் சேர்',
     'enter_new_department_name' => 'புதிய துறை பெயரை உள்ளிடவும்',
     'leave_blank_to_keep_same' => 'மாற்றாமல் இருக்க காலியாக விடவும்',
+    'leave_blank_for_auto'    => 'தானாக உருவாக்க காலியாக விடவும்',
+    'e.g. SGS001 or leave blank' => 'எ.கா. SGS001 அல்லது காலியாக விடவும்',
     'module_management'     => 'தொகுதி மேலாண்மை',
     'create_training_module' => 'பயிற்சி தொகுதியை உருவாக்கு',
     'edit_module'           => 'தொகுதியைத் தொகு',

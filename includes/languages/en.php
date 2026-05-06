@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'Add New Department',
     'enter_new_department_name' => 'Enter new department name',
     'leave_blank_to_keep_same' => 'Leave blank to keep same',
+    'leave_blank_for_auto'    => 'Leave blank to auto-generate',
+    'e.g. SGS001 or leave blank' => 'e.g. SGS001 or leave blank',
     'module_management'     => 'Module Management',
     'create_training_module' => 'Create Training Module',
     'edit_module'           => 'Edit Module',

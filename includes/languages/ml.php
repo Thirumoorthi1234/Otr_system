@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'പുതിയ ഡിപ്പാർട്ട്‌മെന്റ് ചേർക്കുക',
     'enter_new_department_name' => 'പുതിയ ഡിപ്പാർട്ട്‌മെന്റിന്റെ പേര് നൽകുക',
     'leave_blank_to_keep_same' => 'മാറ്റമില്ലാതെ തുടരാൻ ഒഴിച്ചിടുക',
+    'leave_blank_for_auto'    => 'Leave blank to auto-generate',
+    'e.g. SGS001 or leave blank' => 'e.g. SGS001 or leave blank',
     'module_management'     => 'മൊഡ്യൂൾ മാനേജ്‌മെന്റ്',
     'create_training_module' => 'പരിശീലന മൊഡ്യൂൾ സൃഷ്ടിക്കുക',
     'edit_module'           => 'മൊഡ്യൂൾ എഡിറ്റ് ചെയ്യുക',

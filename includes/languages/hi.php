@@ -109,6 +109,8 @@ return [
     'add_new_department'    => 'नया विभाग जोड़ें',
     'enter_new_department_name' => 'नए विभाग का नाम दर्ज करें',
     'leave_blank_to_keep_same' => 'वही रखने के लिए खाली छोड़ दें',
+    'leave_blank_for_auto'    => 'स्वचालित रूप से उत्पन्न करने के लिए खाली छोड़ें',
+    'e.g. SGS001 or leave blank' => 'उदा. SGS001 या खाली छोड़ दें',
     'module_management'     => 'मॉड्यूल प्रबंधन',
     'create_training_module' => 'प्रशिक्षण मॉड्यूल बनाएँ',
     'edit_module'           => 'मॉड्यूल संपादित करें',
