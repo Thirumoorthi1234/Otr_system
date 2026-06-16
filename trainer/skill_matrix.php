@@ -1,13 +1,167 @@
 <?php
-// trainer/skill_matrix.php — Skill Matrix across trainees and modules
+// trainer/skill_matrix.php — Syrma SGS Format Skill Matrix
 require_once '../includes/layout.php';
 checkRole('trainer');
 
 $trainer_id = $_SESSION['user_id'];
+$trainer_name = $_SESSION['full_name'];
 
-// Get all trainees assigned to this trainer (unique)
+// ── Handle AJAX requests ──────────────────────────────────────
+if (isset($_POST['ajax_action'])) {
+    header('Content-Type: application/json');
+    
+    // Save/Update a score entry
+    if ($_POST['ajax_action'] === 'save_score') {
+        $trainee_id = (int)$_POST['trainee_id'];
+        $skill_id   = (int)$_POST['skill_id'];
+        $report_id  = (int)$_POST['report_id'];
+        $score      = $_POST['score'] === '' || $_POST['score'] === 'NA' ? null : (int)$_POST['score'];
+        
+        if ($score !== null && ($score < 1 || $score > 4)) {
+            echo json_encode(['success' => false, 'error' => 'Score must be 1-4 or NA']);
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO skill_matrix_entries (trainee_id, skill_id, report_id, score, scored_by) 
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE score = VALUES(score), scored_by = VALUES(scored_by), scored_at = CURRENT_TIMESTAMP
+        ");
+        $stmt->execute([$trainee_id, $skill_id, $report_id, $score, $trainer_id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+    
+    // Create a new report
+    if ($_POST['ajax_action'] === 'create_report') {
+        $title      = trim($_POST['report_title'] ?? 'Skill Matrix');
+        $date       = $_POST['report_date'] ?? date('Y-m-d');
+        $site       = trim($_POST['site_name'] ?? '');
+        $dept       = trim($_POST['department'] ?? '');
+        $supervisor = trim($_POST['supervisor_name'] ?? '');
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO skill_matrix_reports (report_title, report_date, site_name, department, supervisor_name, trainer_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$title, $date, $site, $dept, $supervisor, $trainer_id]);
+        $newId = $pdo->lastInsertId();
+        
+        // Copy global template skills into this report
+        $templateSkills = $pdo->query("SELECT * FROM skill_matrix_skills WHERE report_id IS NULL ORDER BY sort_order")->fetchAll();
+        $insertSkill = $pdo->prepare("
+            INSERT INTO skill_matrix_skills (report_id, skill_name, category_group, sub_category, required_level, sort_order, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        foreach ($templateSkills as $ts) {
+            $insertSkill->execute([$newId, $ts['skill_name'], $ts['category_group'], $ts['sub_category'], $ts['required_level'], $ts['sort_order'], $trainer_id]);
+        }
+        
+        echo json_encode(['success' => true, 'report_id' => $newId]);
+        exit;
+    }
+    
+    // Update report header
+    if ($_POST['ajax_action'] === 'update_report') {
+        $report_id  = (int)$_POST['report_id'];
+        $title      = trim($_POST['report_title'] ?? '');
+        $date       = $_POST['report_date'] ?? '';
+        $site       = trim($_POST['site_name'] ?? '');
+        $dept       = trim($_POST['department'] ?? '');
+        $supervisor = trim($_POST['supervisor_name'] ?? '');
+        
+        $stmt = $pdo->prepare("
+            UPDATE skill_matrix_reports SET report_title=?, report_date=?, site_name=?, department=?, supervisor_name=?
+            WHERE id=? AND trainer_id=?
+        ");
+        $stmt->execute([$title, $date, $site, $dept, $supervisor, $report_id, $trainer_id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+    
+    // Add a new skill to report
+    if ($_POST['ajax_action'] === 'add_skill') {
+        $report_id   = (int)$_POST['report_id'];
+        $skill_name  = trim($_POST['skill_name']);
+        $cat_group   = trim($_POST['category_group']);
+        $sub_cat     = trim($_POST['sub_category'] ?? '');
+        $req_level   = (int)($_POST['required_level'] ?? 4);
+        
+        // Get max sort_order
+        $maxOrder = $pdo->prepare("SELECT MAX(sort_order) FROM skill_matrix_skills WHERE report_id = ?");
+        $maxOrder->execute([$report_id]);
+        $nextOrder = ($maxOrder->fetchColumn() ?? 0) + 1;
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO skill_matrix_skills (report_id, skill_name, category_group, sub_category, required_level, sort_order, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$report_id, $skill_name, $cat_group, $sub_cat, $req_level, $nextOrder, $trainer_id]);
+        echo json_encode(['success' => true, 'skill_id' => $pdo->lastInsertId()]);
+        exit;
+    }
+    
+    // Delete a skill from report
+    if ($_POST['ajax_action'] === 'delete_skill') {
+        $skill_id  = (int)$_POST['skill_id'];
+        $report_id = (int)$_POST['report_id'];
+        $stmt = $pdo->prepare("DELETE FROM skill_matrix_skills WHERE id = ? AND report_id = ?");
+        $stmt->execute([$skill_id, $report_id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    exit;
+}
+
+// ── Load Report ──────────────────────────────────────────────
+$report_id = isset($_GET['report_id']) ? (int)$_GET['report_id'] : 0;
+
+// Get all reports for this trainer
+$allReports = $pdo->prepare("SELECT * FROM skill_matrix_reports WHERE trainer_id = ? ORDER BY report_date DESC");
+$allReports->execute([$trainer_id]);
+$allReports = $allReports->fetchAll();
+
+$report = null;
+if ($report_id > 0) {
+    $stmt = $pdo->prepare("SELECT * FROM skill_matrix_reports WHERE id = ? AND trainer_id = ?");
+    $stmt->execute([$report_id, $trainer_id]);
+    $report = $stmt->fetch();
+}
+
+// If no report selected but reports exist, pick the latest
+if (!$report && count($allReports) > 0) {
+    $report = $allReports[0];
+    $report_id = $report['id'];
+}
+
+// ── Load Skills for this report ───────────────────────────────
+$skills = [];
+if ($report_id > 0) {
+    $stmt = $pdo->prepare("SELECT * FROM skill_matrix_skills WHERE report_id = ? ORDER BY sort_order ASC");
+    $stmt->execute([$report_id]);
+    $skills = $stmt->fetchAll();
+}
+
+// ── Organize skills by category ─────────────────────────────
+$processSkills = [];
+$operatingSkills = [];
+$processSubCats = [];
+
+foreach ($skills as $sk) {
+    if ($sk['category_group'] === 'Process Knowledge') {
+        $processSkills[] = $sk;
+        $sub = $sk['sub_category'] ?: 'Other';
+        if (!isset($processSubCats[$sub])) $processSubCats[$sub] = [];
+        $processSubCats[$sub][] = $sk;
+    } else {
+        $operatingSkills[] = $sk;
+    }
+}
+
+// ── Load Trainees ──────────────────────────────────────────
 $trainees = $pdo->prepare("
-    SELECT DISTINCT u.id, u.full_name, u.employee_id, u.photo_path, u.department, u.batch_number
+    SELECT DISTINCT u.id, u.full_name, u.employee_id, u.department
     FROM assignments a
     JOIN users u ON a.trainee_id = u.id
     WHERE a.trainer_id = ? AND u.status = 'active'
@@ -16,93 +170,14 @@ $trainees = $pdo->prepare("
 $trainees->execute([$trainer_id]);
 $trainees = $trainees->fetchAll();
 
-// Get all modules assigned to this trainer's trainees
-$modules = $pdo->prepare("
-    SELECT DISTINCT m.id, m.title, m.category
-    FROM assignments a
-    JOIN training_modules m ON a.module_id = m.id
-    WHERE a.trainer_id = ?
-    ORDER BY m.category, m.title
-");
-$modules->execute([$trainer_id]);
-$modules = $modules->fetchAll();
-
-// Build status map [trainee_id][module_id] => ['status', 'exam_status', 'score']
-$statusMap = [];
-$assignments = $pdo->prepare("
-    SELECT a.trainee_id, a.module_id, a.status as assign_status,
-           er.status as exam_status, er.score
-    FROM assignments a
-    LEFT JOIN (
-        SELECT er2.trainee_id, e.module_id, er2.status, er2.score
-        FROM exam_results er2
-        JOIN exams e ON er2.exam_id = e.id
-        WHERE er2.id = (SELECT MAX(er3.id) FROM exam_results er3 WHERE er3.trainee_id = er2.trainee_id)
-    ) er ON (er.trainee_id = a.trainee_id AND er.module_id = a.module_id)
-    WHERE a.trainer_id = ?
-");
-$assignments->execute([$trainer_id]);
-foreach ($assignments->fetchAll() as $row) {
-    $statusMap[$row['trainee_id']][$row['module_id']] = [
-        'assign' => $row['assign_status'],
-        'exam'   => $row['exam_status'],
-        'score'  => $row['score'],
-    ];
-}
-
-// Filter
-$dept_filter  = $_GET['dept'] ?? '';
-$batch_filter = $_GET['batch'] ?? '';
-
-if ($dept_filter) {
-    $trainees = array_filter($trainees, fn($t) => $t['department'] === $dept_filter);
-}
-if ($batch_filter) {
-    $trainees = array_filter($trainees, fn($t) => $t['batch_number'] === $batch_filter);
-}
-
-// Unique depts & batches for filter
-$depts   = array_unique(array_filter(array_column($trainees, 'department')));
-$batches = array_unique(array_filter(array_column($trainees, 'batch_number')));
-
-// Handle CSV Export
-if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-    ob_end_clean();
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="skill_matrix_' . date('Y-m-d') . '.csv"');
-    
-    $output = fopen('php://output', 'w');
-    
-    // Header Row
-    $headers = ['Employee ID', 'Full Name'];
-    foreach ($modules as $mod) {
-        $headers[] = $mod['title'];
+// ── Load Scores ──────────────────────────────────────────
+$scoreMap = []; // [trainee_id][skill_id] => score
+if ($report_id > 0) {
+    $stmt = $pdo->prepare("SELECT trainee_id, skill_id, score FROM skill_matrix_entries WHERE report_id = ?");
+    $stmt->execute([$report_id]);
+    foreach ($stmt->fetchAll() as $row) {
+        $scoreMap[$row['trainee_id']][$row['skill_id']] = $row['score'];
     }
-    fputcsv($output, $headers);
-    
-    // Data Rows
-    foreach ($trainees as $t) {
-        $row = [$t['employee_id'], $t['full_name']];
-        foreach ($modules as $mod) {
-            $st = $statusMap[$t['id']][$mod['id']] ?? null;
-            if (!$st) {
-                $row[] = 'Not Assigned';
-            } else {
-                if ($st['exam'] === 'pass') {
-                    $row[] = 'Passed (' . $st['score'] . '%)';
-                } elseif ($st['exam'] === 'fail') {
-                    $row[] = 'Failed (' . $st['score'] . '%)';
-                } elseif ($st['assign'] === 'in_progress') {
-                    $row[] = 'In Progress';
-                } else {
-                    $row[] = 'Assigned';
-                }
-            }
-        }
-        fputcsv($output, $row);
-    }
-    fclose($output);
-    exit;
 }
 
 renderHeader('Skill Matrix');
@@ -110,229 +185,677 @@ renderSidebar('trainer');
 ?>
 
 <style>
-    /* Elite Corporate Styling */
-    .dashboard-container { padding: 30px; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .matrix-container { 
-        background: #FFFFFF; 
-        border-radius: 16px; 
-        border: 1px solid #E2E8F0; 
-        overflow: hidden; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        position: relative;
-    }
-
-    .matrix-scroll-wrap { 
-        overflow: auto; 
-        max-height: 70vh; 
-        width: 100%;
-    }
-
-    .matrix-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+    /* ═══════════════════════════════════════════
+       SYRMA SGS SKILL MATRIX — Corporate Design
+       ═══════════════════════════════════════════ */
     
-    /* Responsive Space Absorber */
-    .matrix-table .dummy-col { width: 100%; min-width: 20px; border-right: none; }
-    .matrix-table td:hover::after,
-    .matrix-table th:hover::after {
-        content: ""; position: absolute; background-color: rgba(99, 102, 241, 0.05);
-        left: 0; right: 0; top: -5000px; bottom: -5000px; z-index: -1; pointer-events: none;
-    }
-    .matrix-table td:hover::before {
-        content: ""; position: absolute; background-color: rgba(99, 102, 241, 0.05);
-        left: -5000px; right: -5000px; top: 0; bottom: 0; z-index: -1; pointer-events: none;
-    }
-
-    /* Professional Headers: Ultra-Compact High Density */
-    .matrix-table thead th { 
-        position: sticky; top: 0; z-index: 100;
-        background: #F8FAFC; 
-        border-bottom: 2px solid #E2E8F0;
-        vertical-align: bottom;
-        height: 110px; /* Further reduced for absolute efficiency */
-        padding: 0;
-    }
-
-    .matrix-table .fixed-col { 
-        position: sticky; left: 0; z-index: 110;
-        background: #FFFFFF; 
-        border-right: 2px solid #E2E8F0;
-        width: 550px; /* Locked optimal size */
-        min-width: 550px; 
-        padding: 30px 65px;
-    }
-    .matrix-table thead .fixed-col { z-index: 70; background: #F8FAFC; padding-bottom: 20px; }
-
-    /* Elite Angled Architecture */
-    .th-angled-container {
-        width: 108px; /* Condensed for better density */
-        position: relative;
-    }
-    .th-angled-inner {
-        position: absolute;
-        bottom: 12px;
-        left: 20px;
-        transform: rotate(-45deg);
-        transform-origin: left bottom;
-        white-space: nowrap;
-        font-size: 0.68rem;
-        font-weight: 800;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        max-width: 140px;
-    }
-
-    .matrix-cell { 
-        width: 42px; 
-        height: 48px; 
-        text-align: center; 
-        border-right: 1px solid #F1F5F9;
-        border-bottom: 1px solid #F1F5F9;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Professional Status Badges */
-    .status-badge {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        transition: all 0.2s;
-    }
-    .status-badge i { font-size: 0.75rem; }
+    .sm-page { padding: 20px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
     
-    .badge-pass { background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); }
-    .badge-fail { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-    .badge-progress { background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.2); }
-    .badge-assigned { background: rgba(99, 102, 241, 0.1); color: #6366F1; border: 1px solid rgba(99, 102, 241, 0.2); }
-    .badge-empty { color: #E2E8F0; font-size: 0.7rem; }
-
-    .trainee-card { display: flex; align-items: center; gap: 15px; }
-    .trainee-photo { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
-    .trainee-info { display: flex; flex-direction: column; }
-    .trainee-name { font-weight: 800; color: #0F172A; font-size: 0.92rem; }
-    .trainee-id { font-size: 0.75rem; color: #64748B; font-weight: 600; }
-
-    /* Category Headers */
-    .category-section { background: #F1F5F9; font-weight: 900; font-size: 0.7rem; color: #475569; letter-spacing: 1px; text-transform: uppercase; padding: 8px 25px; }
+    /* ── Report Selector ── */
+    .sm-report-bar {
+        display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        margin-bottom: 20px; padding: 16px 20px;
+        background: #fff; border-radius: 14px; border: 1px solid #E2E8F0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .sm-report-bar select { padding: 9px 14px; border-radius: 10px; border: 1px solid #E2E8F0; font-size: 0.88rem; font-weight: 600; min-width: 200px; }
+    .sm-btn {
+        padding: 9px 18px; border-radius: 10px; font-size: 0.82rem; font-weight: 700;
+        border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        transition: all 0.2s ease;
+    }
+    .sm-btn-primary { background: #1E40AF; color: #fff; }
+    .sm-btn-primary:hover { background: #1E3A8A; transform: translateY(-1px); }
+    .sm-btn-success { background: #059669; color: #fff; }
+    .sm-btn-success:hover { background: #047857; transform: translateY(-1px); }
+    .sm-btn-outline { background: #fff; color: #475569; border: 1px solid #CBD5E1; }
+    .sm-btn-outline:hover { background: #F8FAFC; border-color: #94A3B8; }
+    .sm-btn-danger { background: #DC2626; color: #fff; }
+    .sm-btn-danger:hover { background: #B91C1C; }
+    
+    /* ── Matrix Container ── */
+    .sm-matrix-wrap {
+        background: #fff; border-radius: 16px; border: 1px solid #E2E8F0;
+        overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    
+    /* ── Report Header (Syrma SGS style) ── */
+    .sm-report-header {
+        padding: 20px 28px;
+        border-bottom: 2px solid #1E40AF;
+        background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+    }
+    .sm-rh-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .sm-rh-logo { display: flex; align-items: center; gap: 12px; }
+    .sm-rh-logo img { height: 40px; }
+    .sm-rh-logo .company-name { font-size: 1.1rem; font-weight: 900; color: #1E40AF; letter-spacing: 0.5px; }
+    .sm-rh-title { font-size: 1.4rem; font-weight: 900; color: #0F172A; text-align: center; }
+    .sm-rh-fields {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px 24px; margin-top: 12px;
+    }
+    .sm-rh-field { display: flex; align-items: center; gap: 8px; }
+    .sm-rh-field label { font-size: 0.75rem; font-weight: 800; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .sm-rh-field input {
+        flex: 1; padding: 6px 12px; border: 1px solid #CBD5E1; border-radius: 8px;
+        font-size: 0.85rem; font-weight: 600; color: #0F172A;
+        background: rgba(255,255,255,0.8);
+    }
+    .sm-rh-field input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    
+    /* ── Scroll Container ── */
+    .sm-scroll { overflow: auto; max-height: 72vh; }
+    
+    /* ── Matrix Table ── */
+    .sm-table { border-collapse: collapse; width: max-content; min-width: 100%; }
+    .sm-table th, .sm-table td {
+        border: 1px solid #CBD5E1; padding: 0; text-align: center; vertical-align: middle;
+        font-size: 0.78rem; position: relative;
+    }
+    
+    /* ── Sticky columns (S.No, Emp no, Name) ── */
+    .sm-table .col-sno   { position: sticky; left: 0; z-index: 20; width: 40px; min-width: 40px; background: #fff; }
+    .sm-table .col-empno  { position: sticky; left: 40px; z-index: 20; width: 70px; min-width: 70px; background: #fff; }
+    .sm-table .col-name   { position: sticky; left: 110px; z-index: 20; width: 130px; min-width: 130px; background: #fff; text-align: left; }
+    .sm-table thead .col-sno,
+    .sm-table thead .col-empno,
+    .sm-table thead .col-name { z-index: 30; }
+    
+    /* ── Category Header Rows ── */
+    .sm-cat-header {
+        background: #1E40AF !important; color: #fff !important;
+        font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px;
+        padding: 8px 6px !important; white-space: nowrap;
+    }
+    .sm-subcat-header {
+        background: #3B82F6 !important; color: #fff !important;
+        font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px;
+        padding: 6px 4px !important; white-space: nowrap;
+    }
+    .sm-skill-header {
+        background: #EFF6FF !important; color: #1E3A8A;
+        font-weight: 700; font-size: 0.7rem; padding: 8px 4px !important;
+        writing-mode: vertical-rl; text-orientation: mixed;
+        transform: rotate(180deg);
+        height: 120px; white-space: nowrap;
+    }
+    .sm-required-row td {
+        background: #DBEAFE !important; color: #1E40AF;
+        font-weight: 800; font-size: 0.82rem; padding: 6px 4px !important;
+    }
+    
+    /* ── Skill Index Headers ── */
+    .sm-idx-header {
+        background: #F59E0B !important; color: #78350F !important;
+        font-weight: 800; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.3px;
+        padding: 6px 4px !important;
+    }
+    .sm-idx-header.process { background: #10B981 !important; color: #064E3B !important; }
+    .sm-idx-header.operating { background: #F59E0B !important; color: #78350F !important; }
+    .sm-idx-header.individual { background: #8B5CF6 !important; color: #fff !important; }
+    
+    /* ── Data Cells ── */
+    .sm-data-row td { padding: 5px 2px !important; height: 36px; }
+    .sm-data-row:nth-child(even) td { background: #F8FAFC; }
+    .sm-data-row:nth-child(even) .col-sno,
+    .sm-data-row:nth-child(even) .col-empno,
+    .sm-data-row:nth-child(even) .col-name { background: #F8FAFC; }
+    .sm-data-row:hover td { background: #EFF6FF !important; }
+    .sm-data-row:hover .col-sno,
+    .sm-data-row:hover .col-empno,
+    .sm-data-row:hover .col-name { background: #EFF6FF !important; }
+    
+    .sm-score-cell {
+        width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-weight: 700; font-size: 0.85rem; min-height: 28px;
+        border-radius: 4px; transition: all 0.15s;
+    }
+    .sm-score-cell:hover { background: rgba(59,130,246,0.12); }
+    .sm-score-cell.score-4 { color: #059669; }
+    .sm-score-cell.score-3 { color: #0284C7; }
+    .sm-score-cell.score-2 { color: #D97706; }
+    .sm-score-cell.score-1 { color: #DC2626; }
+    .sm-score-cell.score-na { color: #94A3B8; font-size: 0.72rem; font-weight: 600; }
+    
+    .sm-score-input {
+        width: 32px; height: 28px; text-align: center; border: 2px solid #3B82F6;
+        border-radius: 6px; font-weight: 700; font-size: 0.85rem; outline: none;
+        background: #EFF6FF;
+    }
+    
+    /* ── Index cells ── */
+    .sm-idx-cell { font-weight: 800; font-size: 0.82rem; }
+    .sm-idx-cell.total-process { color: #059669; }
+    .sm-idx-cell.total-operating { color: #D97706; }
+    .sm-idx-cell.total-individual { color: #7C3AED; font-size: 0.9rem; }
+    
+    .sm-sno  { font-weight: 700; color: #64748B; font-size: 0.8rem; }
+    .sm-empno { font-weight: 700; color: #0F172A; font-size: 0.78rem; }
+    .sm-name  { font-weight: 700; color: #0F172A; font-size: 0.82rem; padding-left: 8px !important; }
+    
+    /* ── Create Report Modal ── */
+    .sm-modal-bg {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
+        z-index: 9999; align-items: center; justify-content: center;
+    }
+    .sm-modal-bg.active { display: flex; }
+    .sm-modal {
+        background: #fff; border-radius: 20px; padding: 32px; width: 520px; max-width: 95vw;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.15); animation: smSlideUp 0.3s ease;
+    }
+    @keyframes smSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .sm-modal h3 { font-size: 1.2rem; font-weight: 800; color: #0F172A; margin-bottom: 20px; }
+    .sm-modal label { font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; margin-top: 14px; }
+    .sm-modal input, .sm-modal select {
+        width: 100%; padding: 10px 14px; border: 1px solid #E2E8F0; border-radius: 10px;
+        font-size: 0.88rem; font-weight: 600;
+    }
+    .sm-modal input:focus, .sm-modal select:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .sm-modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    
+    /* ── Add Skill Modal ── */
+    .sm-skill-modal { width: 480px; }
+    
+    /* ── Empty State ── */
+    .sm-empty {
+        text-align: center; padding: 80px 30px;
+        background: #fff; border-radius: 16px; border: 1px solid #E2E8F0;
+    }
+    .sm-empty-icon { width: 80px; height: 80px; border-radius: 50%; background: #EFF6FF; color: #3B82F6; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 20px; }
+    .sm-empty h2 { font-size: 1.3rem; font-weight: 800; color: #0F172A; margin-bottom: 8px; }
+    .sm-empty p { color: #64748B; font-size: 0.95rem; margin-bottom: 24px; }
+    
+    /* ── Legend ── */
+    .sm-legend {
+        display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 20px;
+        border-top: 1px solid #E2E8F0; background: #F8FAFC;
+        font-size: 0.76rem; font-weight: 700;
+    }
+    .sm-legend-item { display: flex; align-items: center; gap: 6px; }
+    .sm-legend-dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
 </style>
 
-<!-- Filters -->
-<div class="card" style="margin-bottom:20px; padding:16px 20px;">
-    <form method="GET" style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
-        <div class="form-group" style="margin:0; flex:1; min-width:140px;">
-            <label class="form-label" style="font-size:0.8rem;">Department</label>
-            <select name="dept" class="form-control" style="padding:8px 12px;">
-                <option value="">All Departments</option>
-                <?php foreach ($depts as $d): ?>
-                <option value="<?php echo e($d); ?>" <?php echo $dept_filter === $d ? 'selected' : ''; ?>><?php echo e($d); ?></option>
+<div class="sm-page">
+    
+    <!-- ═══ Report Selector Bar ═══ -->
+    <div class="sm-report-bar">
+        <i class="fas fa-table" style="color:#1E40AF; font-size:1.1rem;"></i>
+        <select id="reportSelector" onchange="switchReport(this.value)">
+            <?php if (empty($allReports)): ?>
+                <option value="">No reports yet</option>
+            <?php else: ?>
+                <?php foreach ($allReports as $r): ?>
+                <option value="<?php echo $r['id']; ?>" <?php echo $r['id'] == $report_id ? 'selected' : ''; ?>>
+                    <?php echo e($r['report_title']); ?> — <?php echo date('d.m.Y', strtotime($r['report_date'])); ?>
+                </option>
                 <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group" style="margin:0; flex:1; min-width:140px;">
-            <label class="form-label" style="font-size:0.8rem;">Batch</label>
-            <select name="batch" class="form-control" style="padding:8px 12px;">
-                <option value="">All Batches</option>
-                <?php foreach ($batches as $b): ?>
-                <option value="<?php echo e($b); ?>" <?php echo $batch_filter === $b ? 'selected' : ''; ?>><?php echo e($b); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary" style="padding:9px 20px;">
-            <i class="fas fa-filter"></i> Filter
+            <?php endif; ?>
+        </select>
+        
+        <button class="sm-btn sm-btn-primary" onclick="showCreateModal()">
+            <i class="fas fa-plus"></i> New Report
         </button>
-        <a href="skill_matrix.php" class="btn" style="background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-muted); padding:9px 20px; font-size:0.85rem;">
-            <i class="fas fa-times"></i> Clear
+        
+        <?php if ($report): ?>
+        <button class="sm-btn sm-btn-outline" onclick="showAddSkillModal()">
+            <i class="fas fa-columns"></i> Manage Skills
+        </button>
+        <a href="export_skill_matrix.php?report_id=<?php echo $report_id; ?>" class="sm-btn sm-btn-success" style="margin-left:auto; text-decoration:none;">
+            <i class="fas fa-file-excel"></i> Export Excel
         </a>
-        <a href="skill_matrix.php?export=csv<?php echo $dept_filter ? '&dept='.urlencode($dept_filter) : ''; ?><?php echo $batch_filter ? '&batch='.urlencode($batch_filter) : ''; ?>" 
-           class="btn" style="background:#10b981; color:#fff; padding:9px 20px; font-size:0.85rem; margin-left:auto;">
-            <i class="fas fa-download"></i> Export CSV
-        </a>
-    </form>
-</div>
-<!-- Legend -->
-<div class="matrix-legend" style="display: flex; gap: 20px; margin-bottom: 25px;">
-    <div class="legend-item"><span class="status-badge badge-pass"><i class="fa-solid fa-check"></i></span> <?php echo __('Passed'); ?></div>
-    <div class="legend-item"><span class="status-badge badge-fail"><i class="fa-solid fa-xmark"></i></span> <?php echo __('Failed'); ?></div>
-    <div class="legend-item"><span class="status-badge badge-progress"><i class="fa-solid fa-hourglass-half"></i></span> <?php echo __('In Progress'); ?></div>
-    <div class="legend-item"><span class="status-badge badge-assigned"><i class="fa-solid fa-circle"></i></span> <?php echo __('Assigned'); ?></div>
-    <div class="legend-item" style="color: #64748B; font-weight: 800; font-size: 0.72rem; letter-spacing:0.5px;"><span class="badge-empty"><i class="fa-solid fa-minus"></i></span> <?php echo __('Not Assigned'); ?></div>
-</div>
-
-<?php if (empty($trainees) || empty($modules)): ?>
-<div class="matrix-container" style="text-align:center; padding:100px 20px;">
-    <div style="width: 80px; height: 80px; background: #F8FAFC; color: #CBD5E1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 25px;">
-        <i class="fa-solid fa-table-cells"></i>
+        <?php endif; ?>
     </div>
-    <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 10px;"><?php echo __('No Matrix Data'); ?></h2>
-    <p style="color: #64748B; font-weight: 600; font-size: 1rem;">Complete assignments to populate the trainer matrix.</p>
-</div>
-<?php else: ?>
-
-<!-- Matrix Table -->
-<div class="matrix-container">
-    <div class="matrix-scroll-wrap">
-        <table class="matrix-table">
-            <thead>
-                <tr>
-                    <th class="fixed-col" style="vertical-align: middle; padding-bottom: 20px;">
-                        <span style="font-size: 0.72rem; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 1px;"><?php echo __('Trainees'); ?></span>
-                    </th>
-                    <?php foreach ($modules as $mod): ?>
-                    <th>
-                        <div class="th-angled-container">
-                            <div class="th-angled-inner"><?php echo e($mod['title']); ?></div>
-                        </div>
-                    </th>
-                    <?php endforeach; ?>
-                    <th class="dummy-col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($trainees as $t): ?>
-                <tr>
-                    <td class="fixed-col">
-                        <div class="trainee-card">
-                            <?php if ($t['photo_path']): ?>
-                                <img src="<?php echo BASE_URL . e($t['photo_path']); ?>" class="trainee-photo">
-                            <?php else: ?>
-                                <div class="trainee-photo" style="display:flex; align-items:center; justify-content:center; background:#F1F5F9; font-size:1.2rem; color:#94A3B8;"><i class="fa-solid fa-user"></i></div>
-                            <?php endif; ?>
-                            <div class="trainee-info">
-                                <span class="trainee-name"><?php echo e($t['full_name']); ?></span>
-                                <span class="trainee-id"><?php echo e($t['employee_id']); ?></span>
-                            </div>
-                        </div>
-                    </td>
-                    <?php foreach ($modules as $mod): 
-                        $st = $statusMap[$t['id']][$mod['id']] ?? null;
-                    ?>
-                    <td class="matrix-cell">
-                        <?php if ($st): ?>
-                            <?php if ($st['exam'] === 'pass'): ?>
-                                <span class="status-badge badge-pass" title="SCORE: <?php echo $st['score']; ?>%"><i class="fa-solid fa-check"></i></span>
-                            <?php elseif ($st['exam'] === 'fail'): ?>
-                                <span class="status-badge badge-fail" title="SCORE: <?php echo $st['score']; ?>%"><i class="fa-solid fa-xmark"></i></span>
-                            <?php elseif ($st['assign'] === 'in_progress'): ?>
-                                <span class="status-badge badge-progress" title="IN PROGRESS"><i class="fa-solid fa-hourglass-half"></i></span>
-                            <?php else: ?>
-                                <span class="status-badge badge-assigned" title="ASSIGNED"><i class="fa-solid fa-circle"></i></span>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <span class="badge-empty"><i class="fa-solid fa-minus"></i></span>
+    
+    <?php if (!$report): ?>
+    <!-- ═══ Empty State ═══ -->
+    <div class="sm-empty">
+        <div class="sm-empty-icon"><i class="fas fa-table-cells"></i></div>
+        <h2>No Skill Matrix Report</h2>
+        <p>Create your first Skill Matrix report to start tracking trainee skills.</p>
+        <button class="sm-btn sm-btn-primary" onclick="showCreateModal()" style="font-size:0.95rem; padding:12px 28px;">
+            <i class="fas fa-plus"></i> Create Skill Matrix
+        </button>
+    </div>
+    
+    <?php else: ?>
+    <!-- ═══ Matrix Container ═══ -->
+    <div class="sm-matrix-wrap">
+        
+        <!-- ── Report Header ── -->
+        <div class="sm-report-header">
+            <div class="sm-rh-top">
+                <div class="sm-rh-logo">
+                    <img src="<?php echo BASE_URL; ?>assets/img/profiles/logo.svg" alt="Syrma SGS" onerror="this.style.display='none'">
+                    <span class="company-name">SYRMA SGS</span>
+                </div>
+                <div class="sm-rh-title" id="reportTitleDisplay"><?php echo e($report['report_title']); ?></div>
+                <button class="sm-btn sm-btn-outline" onclick="showEditHeaderModal()" style="font-size:0.75rem; padding:6px 12px;">
+                    <i class="fas fa-pen"></i> Edit
+                </button>
+            </div>
+            <div class="sm-rh-fields">
+                <div class="sm-rh-field">
+                    <label>Date</label>
+                    <span style="font-weight:700; color:#0F172A; font-size:0.88rem;"><?php echo date('d.m.Y', strtotime($report['report_date'])); ?></span>
+                </div>
+                <div class="sm-rh-field">
+                    <label>Site Name</label>
+                    <span style="font-weight:700; color:#0F172A; font-size:0.88rem;"><?php echo e($report['site_name']); ?></span>
+                </div>
+                <div class="sm-rh-field">
+                    <label>Department</label>
+                    <span style="font-weight:700; color:#0F172A; font-size:0.88rem;"><?php echo e($report['department']); ?></span>
+                </div>
+                <div class="sm-rh-field">
+                    <label>Supervisor Name</label>
+                    <span style="font-weight:700; color:#0F172A; font-size:0.88rem;"><?php echo e($report['supervisor_name']); ?></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ── Scrollable Matrix ── -->
+        <div class="sm-scroll">
+            <table class="sm-table" id="skillMatrixTable">
+                <thead>
+                    <!-- ROW 1: Category Groups -->
+                    <tr>
+                        <th class="col-sno sm-cat-header" rowspan="3" style="background:#0F172A !important;">S.No</th>
+                        <th class="col-empno sm-cat-header" rowspan="3" style="background:#0F172A !important;">Emp no.</th>
+                        <th class="col-name sm-cat-header" rowspan="3" style="background:#0F172A !important; text-align:left; padding-left:8px !important;">Name</th>
+                        
+                        <?php if (count($processSkills) > 0): ?>
+                        <th colspan="<?php echo count($processSkills); ?>" class="sm-cat-header">Process Knowledge</th>
                         <?php endif; ?>
-                    </td>
+                        
+                        <?php if (count($operatingSkills) > 0): ?>
+                        <th colspan="<?php echo count($operatingSkills); ?>" class="sm-cat-header" style="background:#B45309 !important;">Operating Knowledge</th>
+                        <?php endif; ?>
+                        
+                        <!-- Skill Index columns -->
+                        <th colspan="3" class="sm-cat-header" style="background:#7C3AED !important;">Skill Index</th>
+                    </tr>
+                    
+                    <!-- ROW 2: Sub-Categories -->
+                    <tr>
+                        <?php 
+                        // Process Knowledge sub-categories
+                        foreach ($processSubCats as $subName => $subSkills): 
+                        ?>
+                        <th colspan="<?php echo count($subSkills); ?>" class="sm-subcat-header"><?php echo e($subName); ?></th>
+                        <?php endforeach; ?>
+                        
+                        <?php if (count($operatingSkills) > 0): ?>
+                        <th colspan="<?php echo count($operatingSkills); ?>" class="sm-subcat-header" style="background:#D97706 !important;"></th>
+                        <?php endif; ?>
+                        
+                        <th class="sm-idx-header process" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Total Process skill</th>
+                        <th class="sm-idx-header operating" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Total Operating skill</th>
+                        <th class="sm-idx-header individual" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Individual Skill Index</th>
+                    </tr>
+                    
+                    <!-- ROW 3: Individual Skill Names (vertical) -->
+                    <tr>
+                        <?php foreach ($processSkills as $sk): ?>
+                        <th class="sm-skill-header" title="<?php echo e($sk['skill_name']); ?>">
+                            <?php echo e($sk['skill_name']); ?>
+                        </th>
+                        <?php endforeach; ?>
+                        
+                        <?php foreach ($operatingSkills as $sk): ?>
+                        <th class="sm-skill-header" title="<?php echo e($sk['skill_name']); ?>">
+                            <?php echo e($sk['skill_name']); ?>
+                        </th>
+                        <?php endforeach; ?>
+                    </tr>
+                    
+                    <!-- ROW 4: Required Skill Levels -->
+                    <tr class="sm-required-row">
+                        <td class="col-sno" style="background:#DBEAFE !important;"></td>
+                        <td class="col-empno" style="background:#DBEAFE !important;"></td>
+                        <td class="col-name" style="background:#DBEAFE !important; text-align:left; padding-left:8px !important; font-weight:800; color:#1E40AF; font-size:0.72rem; text-transform:uppercase;">Required Skill Levels</td>
+                        <?php foreach ($processSkills as $sk): ?>
+                        <td><?php echo $sk['required_level']; ?></td>
+                        <?php endforeach; ?>
+                        <?php foreach ($operatingSkills as $sk): ?>
+                        <td><?php echo $sk['required_level']; ?></td>
+                        <?php endforeach; ?>
+                        <td style="background:#D1FAE5 !important; font-weight:800; color:#059669;"><?php echo array_sum(array_column($processSkills, 'required_level')); ?></td>
+                        <td style="background:#FEF3C7 !important; font-weight:800; color:#D97706;"><?php echo array_sum(array_column($operatingSkills, 'required_level')); ?></td>
+                        <td style="background:#EDE9FE !important; font-weight:800; color:#7C3AED;">100</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $sno = 0; foreach ($trainees as $t): $sno++; ?>
+                    <tr class="sm-data-row">
+                        <td class="col-sno"><span class="sm-sno"><?php echo $sno; ?></span></td>
+                        <td class="col-empno"><span class="sm-empno"><?php echo e($t['employee_id']); ?></span></td>
+                        <td class="col-name"><span class="sm-name"><?php echo e($t['full_name']); ?></span></td>
+                        
+                        <?php 
+                        $processTotal = 0; $processMax = 0; $processCount = 0;
+                        foreach ($processSkills as $sk): 
+                            $score = $scoreMap[$t['id']][$sk['id']] ?? null;
+                            $processMax += $sk['required_level'];
+                            if ($score !== null) { $processTotal += $score; $processCount++; }
+                        ?>
+                        <td>
+                            <div class="sm-score-cell <?php echo $score !== null ? 'score-'.$score : 'score-na'; ?>"
+                                 onclick="editScore(this, <?php echo $t['id']; ?>, <?php echo $sk['id']; ?>, <?php echo $report_id; ?>)"
+                                 data-trainee="<?php echo $t['id']; ?>"
+                                 data-skill="<?php echo $sk['id']; ?>"
+                                 data-score="<?php echo $score ?? ''; ?>">
+                                <?php echo $score !== null ? $score : 'NA'; ?>
+                            </div>
+                        </td>
+                        <?php endforeach; ?>
+                        
+                        <?php 
+                        $opTotal = 0; $opMax = 0; $opCount = 0;
+                        foreach ($operatingSkills as $sk): 
+                            $score = $scoreMap[$t['id']][$sk['id']] ?? null;
+                            $opMax += $sk['required_level'];
+                            if ($score !== null) { $opTotal += $score; $opCount++; }
+                        ?>
+                        <td>
+                            <div class="sm-score-cell <?php echo $score !== null ? 'score-'.$score : 'score-na'; ?>"
+                                 onclick="editScore(this, <?php echo $t['id']; ?>, <?php echo $sk['id']; ?>, <?php echo $report_id; ?>)"
+                                 data-trainee="<?php echo $t['id']; ?>"
+                                 data-skill="<?php echo $sk['id']; ?>"
+                                 data-score="<?php echo $score ?? ''; ?>">
+                                <?php echo $score !== null ? $score : 'NA'; ?>
+                            </div>
+                        </td>
+                        <?php endforeach; ?>
+                        
+                        <?php 
+                        $totalMax = $processMax + $opMax;
+                        $totalScore = $processTotal + $opTotal;
+                        $skillIndex = $totalMax > 0 ? round(($totalScore / $totalMax) * 100) : 0;
+                        ?>
+                        <td><span class="sm-idx-cell total-process"><?php echo $processTotal; ?></span></td>
+                        <td><span class="sm-idx-cell total-operating"><?php echo $opTotal; ?></span></td>
+                        <td><span class="sm-idx-cell total-individual" style="<?php 
+                            if ($skillIndex >= 80) echo 'color:#059669;';
+                            elseif ($skillIndex >= 60) echo 'color:#D97706;';
+                            else echo 'color:#DC2626;';
+                        ?>"><?php echo $skillIndex; ?></span></td>
+                    </tr>
                     <?php endforeach; ?>
-                    <td class="dummy-col"></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                    
+                    <?php if (empty($trainees)): ?>
+                    <tr>
+                        <td colspan="<?php echo 3 + count($skills) + 3; ?>" style="padding: 40px !important; color: #94A3B8; font-weight: 600;">
+                            <i class="fas fa-users" style="font-size: 1.5rem; display: block; margin-bottom: 10px;"></i>
+                            No trainees assigned. Assign trainees from the Assignments page.
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- ── Legend ── -->
+        <div class="sm-legend">
+            <div class="sm-legend-item"><span class="sm-legend-dot" style="background:#059669;"></span> 4 - Expert</div>
+            <div class="sm-legend-item"><span class="sm-legend-dot" style="background:#0284C7;"></span> 3 - Proficient</div>
+            <div class="sm-legend-item"><span class="sm-legend-dot" style="background:#D97706;"></span> 2 - Basic</div>
+            <div class="sm-legend-item"><span class="sm-legend-dot" style="background:#DC2626;"></span> 1 - Beginner</div>
+            <div class="sm-legend-item"><span class="sm-legend-dot" style="background:#CBD5E1;"></span> NA - Not Assessed</div>
+            <div style="margin-left:auto; font-size:0.72rem; color:#94A3B8; font-weight:600;">
+                <i class="fas fa-mouse-pointer"></i> Click any cell to enter/edit score
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- ═══ Create Report Modal ═══ -->
+<div class="sm-modal-bg" id="createReportModal">
+    <div class="sm-modal">
+        <h3><i class="fas fa-plus-circle" style="color:#1E40AF;"></i> Create Skill Matrix Report</h3>
+        <label>Report Title</label>
+        <input type="text" id="newReportTitle" placeholder="e.g. Skill Matrix for RFID" value="Skill Matrix for RFID">
+        <label>Date</label>
+        <input type="date" id="newReportDate" value="<?php echo date('Y-m-d'); ?>">
+        <label>Site Name</label>
+        <input type="text" id="newSiteName" placeholder="e.g. Chennai - Unit 2">
+        <label>Department</label>
+        <input type="text" id="newDepartment" placeholder="e.g. POHC - Quality">
+        <label>Supervisor Name</label>
+        <input type="text" id="newSupervisor" placeholder="e.g. R.Praveena">
+        <div class="sm-modal-actions">
+            <button class="sm-btn sm-btn-outline" onclick="closeModal('createReportModal')">Cancel</button>
+            <button class="sm-btn sm-btn-primary" onclick="createReport()"><i class="fas fa-check"></i> Create</button>
+        </div>
     </div>
 </div>
-<?php endif; ?>?>
+
+<!-- ═══ Edit Header Modal ═══ -->
+<div class="sm-modal-bg" id="editHeaderModal">
+    <div class="sm-modal">
+        <h3><i class="fas fa-pen" style="color:#1E40AF;"></i> Edit Report Header</h3>
+        <label>Report Title</label>
+        <input type="text" id="editReportTitle" value="<?php echo e($report['report_title'] ?? ''); ?>">
+        <label>Date</label>
+        <input type="date" id="editReportDate" value="<?php echo $report['report_date'] ?? date('Y-m-d'); ?>">
+        <label>Site Name</label>
+        <input type="text" id="editSiteName" value="<?php echo e($report['site_name'] ?? ''); ?>">
+        <label>Department</label>
+        <input type="text" id="editDepartment" value="<?php echo e($report['department'] ?? ''); ?>">
+        <label>Supervisor Name</label>
+        <input type="text" id="editSupervisor" value="<?php echo e($report['supervisor_name'] ?? ''); ?>">
+        <div class="sm-modal-actions">
+            <button class="sm-btn sm-btn-outline" onclick="closeModal('editHeaderModal')">Cancel</button>
+            <button class="sm-btn sm-btn-primary" onclick="updateReportHeader()"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Add Skill Modal ═══ -->
+<div class="sm-modal-bg" id="addSkillModal">
+    <div class="sm-modal sm-skill-modal">
+        <h3><i class="fas fa-columns" style="color:#1E40AF;"></i> Add Skill Column</h3>
+        <label>Skill Name</label>
+        <input type="text" id="newSkillName" placeholder="e.g. Soldering">
+        <label>Category Group</label>
+        <select id="newCatGroup">
+            <option value="Process Knowledge">Process Knowledge</option>
+            <option value="Operating Knowledge">Operating Knowledge</option>
+        </select>
+        <label>Sub-Category</label>
+        <select id="newSubCat">
+            <option value="">None</option>
+            <option value="Basic Process Knowledge">Basic Process Knowledge</option>
+            <option value="Basic Operating Skill-Theoretical">Basic Operating Skill-Theoretical</option>
+            <option value="Knowledge/Awareness">Knowledge/Awareness</option>
+        </select>
+        <label>Required Level</label>
+        <input type="number" id="newReqLevel" value="4" min="1" max="4">
+        <div class="sm-modal-actions">
+            <button class="sm-btn sm-btn-outline" onclick="closeModal('addSkillModal')">Cancel</button>
+            <button class="sm-btn sm-btn-primary" onclick="addSkill()"><i class="fas fa-plus"></i> Add Skill</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const REPORT_ID = <?php echo $report_id ?: 0; ?>;
+
+// ── Score Editing ──
+function editScore(cell, traineeId, skillId, reportId) {
+    // Already editing?
+    if (cell.querySelector('input')) return;
+    
+    const currentScore = cell.dataset.score || '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'sm-score-input';
+    input.value = currentScore;
+    input.maxLength = 2;
+    input.placeholder = '1-4';
+    
+    cell.textContent = '';
+    cell.appendChild(input);
+    input.focus();
+    input.select();
+    
+    function saveScore() {
+        let val = input.value.trim().toUpperCase();
+        let numVal = null;
+        
+        if (val === '' || val === 'NA') {
+            numVal = null;
+        } else {
+            numVal = parseInt(val);
+            if (isNaN(numVal) || numVal < 1 || numVal > 4) {
+                Swal.fire({ icon: 'error', title: 'Invalid Score', text: 'Enter 1-4 or leave blank for NA', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
+                input.focus();
+                return;
+            }
+        }
+        
+        // AJAX save
+        const formData = new FormData();
+        formData.append('ajax_action', 'save_score');
+        formData.append('trainee_id', traineeId);
+        formData.append('skill_id', skillId);
+        formData.append('report_id', reportId);
+        formData.append('score', numVal !== null ? numVal : 'NA');
+        
+        fetch(window.location.pathname, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    cell.dataset.score = numVal !== null ? numVal : '';
+                    cell.className = 'sm-score-cell ' + (numVal !== null ? 'score-' + numVal : 'score-na');
+                    cell.textContent = numVal !== null ? numVal : 'NA';
+                    recalculateRow(cell.closest('tr'));
+                }
+            });
+    }
+    
+    input.addEventListener('blur', saveScore);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); saveScore(); }
+        if (e.key === 'Escape') {
+            cell.className = 'sm-score-cell ' + (currentScore ? 'score-' + currentScore : 'score-na');
+            cell.textContent = currentScore || 'NA';
+        }
+        // Tab navigation
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            saveScore();
+            // Move to next cell
+            const td = cell.closest('td');
+            const nextTd = e.shiftKey ? td.previousElementSibling : td.nextElementSibling;
+            if (nextTd) {
+                const nextCell = nextTd.querySelector('.sm-score-cell');
+                if (nextCell) nextCell.click();
+            }
+        }
+    });
+}
+
+// ── Recalculate Row Totals ──
+function recalculateRow(tr) {
+    const cells = tr.querySelectorAll('.sm-score-cell');
+    let processTotal = 0, opTotal = 0;
+    const processCount = <?php echo count($processSkills); ?>;
+    const opCount = <?php echo count($operatingSkills); ?>;
+    const processMax = <?php echo array_sum(array_column($processSkills, 'required_level')); ?>;
+    const opMax = <?php echo array_sum(array_column($operatingSkills, 'required_level')); ?>;
+    
+    cells.forEach((cell, idx) => {
+        const score = parseInt(cell.dataset.score);
+        if (!isNaN(score)) {
+            if (idx < processCount) processTotal += score;
+            else opTotal += score;
+        }
+    });
+    
+    const totalMax = processMax + opMax;
+    const skillIndex = totalMax > 0 ? Math.round(((processTotal + opTotal) / totalMax) * 100) : 0;
+    
+    const idxCells = tr.querySelectorAll('.sm-idx-cell');
+    if (idxCells[0]) idxCells[0].textContent = processTotal;
+    if (idxCells[1]) idxCells[1].textContent = opTotal;
+    if (idxCells[2]) {
+        idxCells[2].textContent = skillIndex;
+        if (skillIndex >= 80) idxCells[2].style.color = '#059669';
+        else if (skillIndex >= 60) idxCells[2].style.color = '#D97706';
+        else idxCells[2].style.color = '#DC2626';
+    }
+}
+
+// ── Report Management ──
+function switchReport(id) {
+    if (id) window.location.href = '?report_id=' + id;
+}
+
+function showCreateModal() { document.getElementById('createReportModal').classList.add('active'); }
+function showEditHeaderModal() { document.getElementById('editHeaderModal').classList.add('active'); }
+function showAddSkillModal() { document.getElementById('addSkillModal').classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// Close modal on backdrop click
+document.querySelectorAll('.sm-modal-bg').forEach(bg => {
+    bg.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+});
+
+function createReport() {
+    const formData = new FormData();
+    formData.append('ajax_action', 'create_report');
+    formData.append('report_title', document.getElementById('newReportTitle').value);
+    formData.append('report_date', document.getElementById('newReportDate').value);
+    formData.append('site_name', document.getElementById('newSiteName').value);
+    formData.append('department', document.getElementById('newDepartment').value);
+    formData.append('supervisor_name', document.getElementById('newSupervisor').value);
+    
+    fetch(window.location.pathname, { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '?report_id=' + data.report_id;
+            }
+        });
+}
+
+function updateReportHeader() {
+    const formData = new FormData();
+    formData.append('ajax_action', 'update_report');
+    formData.append('report_id', REPORT_ID);
+    formData.append('report_title', document.getElementById('editReportTitle').value);
+    formData.append('report_date', document.getElementById('editReportDate').value);
+    formData.append('site_name', document.getElementById('editSiteName').value);
+    formData.append('department', document.getElementById('editDepartment').value);
+    formData.append('supervisor_name', document.getElementById('editSupervisor').value);
+    
+    fetch(window.location.pathname, { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) window.location.reload();
+        });
+}
+
+function addSkill() {
+    const name = document.getElementById('newSkillName').value.trim();
+    if (!name) { Swal.fire({ icon: 'error', text: 'Enter skill name', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); return; }
+    
+    const formData = new FormData();
+    formData.append('ajax_action', 'add_skill');
+    formData.append('report_id', REPORT_ID);
+    formData.append('skill_name', name);
+    formData.append('category_group', document.getElementById('newCatGroup').value);
+    formData.append('sub_category', document.getElementById('newSubCat').value);
+    formData.append('required_level', document.getElementById('newReqLevel').value);
+    
+    fetch(window.location.pathname, { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) window.location.reload();
+        });
+}
+</script>
 
 <?php renderFooter(); ?>
