@@ -321,7 +321,7 @@ return [
     'practical_training_sdc' => 'ప్రాక్టికల్ శిక్షణ-SDC',
     'practical_training_sdc_desc' => 'సాంకేతిక నైపుణ్యం కోసం స్కిల్ డెవలప్‌మెంట్ సెంటర్ శిక్షణ.',
     'ojt_training_shop_floor' => 'పని ప్రదేశంలో శిక్షణ- షాప్ ఫ్లోర్',
-    'otj_training_shop_floor_desc' => 'నిజమైన ఉత్పత్తి ఫ్లోర్ శిక్షణ మరియు కార్యాచరణ అనుభవం.',
+    'ojt_training_shop_floor_desc' => 'నిజమైన ఉత్పత్తి ఫ్లోర్ శిక్షణ మరియు కార్యాచరణ అనుభవం.',
     'your_training_modules' => 'మీ శిక్షణ మాడ్యూల్స్',
     'complete_assigned_modules_desc' => 'మీ శిక్షణ ప్రయాణంలో పురోగతి సాధించడానికి మీకు కేటాయించిన మాడ్యూల్స్ పూర్తి చేయండి.',
     'revisit_module' => 'మాడ్యూల్‌ను మళ్ళీ సందర్శించండి',

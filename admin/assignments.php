@@ -24,6 +24,14 @@ if (isset($_POST['assign'])) {
     } else {
         $stmt = $pdo->prepare("INSERT INTO assignments (trainee_id, trainer_id, module_id, assigned_date) VALUES (?, ?, ?, ?)");
         $stmt->execute([$trainee_id, $trainer_id, $module_id, $date]);
+        
+        // Notify Trainee
+        $modStmt = $pdo->prepare("SELECT title FROM training_modules WHERE id = ?");
+        $modStmt->execute([$module_id]);
+        $modTitle = $modStmt->fetchColumn();
+        $assigner = $_SESSION['full_name'] ?? 'Admin';
+        addNotification($trainee_id, "New Training Assigned", "$assigner assigned you a new module: '$modTitle'.", "info", "trainee/my-training.php");
+        
         $message = __("Assignment created successfully!");
     }
 }

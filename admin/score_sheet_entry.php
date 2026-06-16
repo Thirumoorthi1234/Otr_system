@@ -37,6 +37,11 @@ if (isset($_POST['save_scores'])) {
                 $stmt = $pdo->prepare("INSERT INTO induction_scores (trainee_id, topic_1_score, topic_2_score, topic_3_score, topic_4_score, topic_5_score, topic_6_score, trainer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$t_id, $s1, $s2, $s3, $s4, $s5, $s6, $trainer_id]);
             }
+            
+            // Notify Trainee
+            $assigner = $_SESSION['full_name'] ?? 'Admin/Trainer';
+            addNotification($t_id, "Induction Scores Updated", "$assigner has recorded or updated your induction test scores.", "info", "notifications_inbox.php");
+            
             $message = "Scores saved successfully!";
         }
     }

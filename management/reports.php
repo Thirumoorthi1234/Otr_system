@@ -296,7 +296,7 @@ renderSidebar('management');
 </style>
 
 <div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none;">
-    <button onclick="togglePrintPreview()" class="btn-preview-close"><i class="fas fa-times"></i> Close Preview</button>
+
 
     <div class="report-nav-group" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%;">
         <div class="premium-tabs">
@@ -308,9 +308,6 @@ renderSidebar('management');
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button onclick="togglePrintPreview()" class="btn" style="background: white; color: #0F172A; padding: 10px 24px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 2px solid #E2E8F0; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-eye"></i> Preview & Print
-            </button>
             <button onclick="exportReport()" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 24px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25); border: none; cursor: pointer; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-file-pdf"></i> Generate PDF
             </button>

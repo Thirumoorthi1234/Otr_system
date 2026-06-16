@@ -16,6 +16,14 @@ if (isset($_POST['assign_refresher'])) {
 
     $stmt = $pdo->prepare("INSERT INTO refresher_training (trainee_id, module_id, due_date, notes, assigned_by) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([$trainee_id, $module_id, $due_date, $notes, $assigned_by]);
+    
+    // Notify Trainee
+    $modStmt = $pdo->prepare("SELECT title FROM training_modules WHERE id = ?");
+    $modStmt->execute([$module_id]);
+    $modTitle = $modStmt->fetchColumn();
+    $assigner = $_SESSION['full_name'] ?? 'Your trainer';
+    addNotification($trainee_id, "Refresher Training Assigned", "$assigner assigned a refresher for '$modTitle' (Due: $due_date).", "warning", "trainee/refresher.php");
+
     $message = 'Refresher training assigned successfully!';
 }
 

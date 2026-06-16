@@ -8,30 +8,75 @@ $trainee_id = $_SESSION['user_id'];
 renderHeader(__('my_training'));
 renderSidebar('trainee');
 
-// Fixed Modules as requested
-$modules_to_show = [
-    [
-        'id' => 1,
-        'title' => __('induction_training'),
-        'icon' => 'fa-book-open-reader',
-        'color' => '#4e73df',
-        'desc' => __('induction_training_desc')
-    ],
-    [
-        'id' => 2,
-        'title' => __('practical_training_sdc'),
-        'icon' => 'fa-microchip',
-        'color' => '#1cc88a',
-        'desc' => __('practical_training_sdc_desc')
-    ],
-    [
-        'id' => 3,
-        'title' => __('otj_training_shop_floor'),
-        'icon' => 'fa-industry',
-        'color' => '#f6c23e',
-        'desc' => __('otj_training_shop_floor_desc')
-    ]
-];
+// Fetch all modules dynamically from the database
+$stmt_modules = $pdo->query("SELECT * FROM training_modules ORDER BY id ASC");
+$db_modules = $stmt_modules->fetchAll();
+
+$modules_to_show = [];
+foreach ($db_modules as $m) {
+    $id = $m['id'];
+    
+    // Translation keys mapping for standard/seeded modules
+    $title_key = '';
+    $desc_key = '';
+    if ($id == 1) {
+        $title_key = 'induction_training';
+        $desc_key = 'induction_training_desc';
+    } elseif ($id == 2) {
+        $title_key = 'practical_training_sdc';
+        $desc_key = 'practical_training_sdc_desc';
+    } elseif ($id == 3) {
+        // Correcting key to match translation config (ojt vs otj)
+        $title_key = 'ojt_training_shop_floor';
+        $desc_key = 'ojt_training_shop_floor_desc';
+    } else {
+        // Dynamically check translation based on slug/normalized title or fallback to DB
+        $normalized = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', trim($m['title'])));
+        $title_key = $normalized;
+        $desc_key = $normalized . '_desc';
+    }
+    
+    $title = __($title_key, $m['title']);
+    $desc = __($desc_key, $m['description']);
+    
+    // Choose icon and color based on ID/Category
+    $category = strtolower(trim($m['category'] ?? ''));
+    if ($id == 1) {
+        $icon = 'fa-book-open-reader';
+        $color = '#4e73df';
+    } elseif ($id == 2) {
+        $icon = 'fa-microchip';
+        $color = '#1cc88a';
+    } elseif ($id == 3) {
+        $icon = 'fa-industry';
+        $color = '#f6c23e';
+    } elseif (strpos($category, 'ai') !== false || strpos($category, 'digital') !== false) {
+        if (strpos(strtolower($m['title']), 'robot') !== false || strpos(strtolower($m['title']), 'rpa') !== false) {
+            $icon = 'fa-robot';
+            $color = '#ec4899';
+        } elseif (strpos(strtolower($m['title']), 'predictive') !== false || strpos(strtolower($m['title']), 'maintenance') !== false) {
+            $icon = 'fa-brain';
+            $color = '#a855f7';
+        } else {
+            $icon = 'fa-laptop-code';
+            $color = '#36b9cc';
+        }
+    } else {
+        // Dynamic fallback selection
+        $colors = ['#36b9cc', '#a855f7', '#ec4899', '#f43f5e', '#6366f1', '#10b981', '#f59e0b'];
+        $icons = ['fa-graduation-cap', 'fa-cogs', 'fa-chart-line', 'fa-qrcode', 'fa-wrench', 'fa-desktop'];
+        $color = $colors[$id % count($colors)];
+        $icon = $icons[$id % count($icons)];
+    }
+    
+    $modules_to_show[] = [
+        'id' => $id,
+        'title' => $title,
+        'icon' => $icon,
+        'color' => $color,
+        'desc' => $desc
+    ];
+}
 ?>
 
 <div class="training-container" style="padding: 20px;">

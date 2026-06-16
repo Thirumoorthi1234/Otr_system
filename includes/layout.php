@@ -142,6 +142,10 @@ function renderSidebar($role) {
                 <i class="fas fa-sitemap"></i>
                 <span class="menu-text"><?php echo __('mapping_status'); ?></span>
             </a>
+            <a href="<?php echo BASE_URL; ?>trainer/ojt_evidence.php" class="menu-item <?php echo isActive('ojt_evidence.php'); ?>" data-label="OJT Evidence">
+                <i class="fas fa-images"></i>
+                <span class="menu-text">OJT Evidence</span>
+            </a>
             <a href="<?php echo BASE_URL; ?>admin/induction_records.php" class="menu-item <?php echo isActive('induction_records.php'); ?>" data-label="Induction">
                 <i class="fas fa-id-badge"></i>
                 <span class="menu-text"><?php echo __('induction_records'); ?></span>

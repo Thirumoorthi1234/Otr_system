@@ -179,6 +179,12 @@ renderSidebar('trainer');
             <a href="progress.php?assignment_id=<?php echo $t['assignment_id']; ?>" class="btn btn-primary" style="font-size:0.75rem; padding:6px 12px; flex:1; text-align:center;">
                 <i class="fas fa-edit"></i> Manage
             </a>
+            <a href="ojt_evidence.php?assignment_id=<?php echo $t['assignment_id']; ?>&filter=all" class="btn" style="background:rgba(167,139,250,0.12); color:#7c3aed; font-size:0.75rem; padding:6px 12px; flex:1; text-align:center; position:relative;">
+                <i class="fas fa-images"></i> Evidence
+                <?php if ($t['evidence_count'] > 0): ?>
+                <span style="position:absolute; top:-6px; right:-4px; background:#f59e0b; color:#fff; border-radius:50%; width:17px; height:17px; font-size:0.62rem; font-weight:800; display:flex; align-items:center; justify-content:center;"><?php echo $t['evidence_count']; ?></span>
+                <?php endif; ?>
+            </a>
             <a href="../admin/training_record.php?type=full&id=<?php echo $t['assignment_id']; ?>" class="btn" style="background:#edf2f7; color:var(--text-muted); font-size:0.75rem; padding:6px 12px; flex:1; text-align:center;" target="_blank">
                 <i class="fas fa-file-export"></i> Report
             </a>

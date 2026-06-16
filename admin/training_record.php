@@ -184,8 +184,27 @@ $indu_percent = $indu_total > 0 ? round(($indu_done / $indu_total) * 100) : 0;
 
 <div class="no-print">
     <a href="javascript:window.print()" class="btn"><i class="fas fa-print"></i></a>
-    <a href="javascript:history.back()" class="btn" style="background:#555"><i class="fas fa-arrow-left"></i> Back</a>
+    <a href="javascript:goBack()" class="btn" style="background:#555"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+<script>
+function goBack() {
+    // If page was opened in a new tab (no history), close tab or go to a fallback
+    if (history.length <= 1 || document.referrer === '') {
+        // Try to close the tab; if blocked, redirect to the admin assignments page
+        try {
+            window.close();
+            // If window.close() is allowed but asynchronous, redirect after a short wait
+            setTimeout(function() {
+                window.location.href = '../admin/assignments.php';
+            }, 300);
+        } catch(e) {
+            window.location.href = '../admin/assignments.php';
+        }
+    } else {
+        history.back();
+    }
+}
+</script>
 
 <div class="report-page">
     <div class="header">

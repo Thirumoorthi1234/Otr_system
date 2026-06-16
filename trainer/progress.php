@@ -82,6 +82,12 @@ if (isset($_POST['save_stage'])) {
     
     $stmt = $pdo->prepare("INSERT INTO training_stages (assignment_id, type, stage_name, man_hours, certified_date, remarks, trainer_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([$assignment_id, $type, $stage_name, $man_hours, $date, $remarks, $_SESSION['user_id']]);
+    
+    // Notify Trainee
+    $trainerName = $_SESSION['full_name'] ?? 'Your trainer';
+    $msg = "$trainerName has certified your '$stage_name' stage for {$assignment['module_name']}.";
+    addNotification($assignment['trainee_id'], "Stage Certified: $stage_name", $msg, "success", "trainee/my-training.php");
+    
     $message = "Training stage certified successfully!";
 }
 

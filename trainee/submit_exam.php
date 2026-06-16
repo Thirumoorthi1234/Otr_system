@@ -41,6 +41,16 @@ $stmt = $pdo->prepare("INSERT INTO exam_results (trainee_id, exam_id, score, max
 $stmt->execute([$trainee_id, $exam_id, $score, $status]);
 $result_id = $pdo->lastInsertId();
 
+// Notify Trainer
+$trainerStmt = $pdo->prepare("SELECT a.trainer_id, m.title as module_name FROM exams e JOIN assignments a ON e.module_id = a.module_id JOIN training_modules m ON a.module_id = m.id WHERE e.id = ? AND a.trainee_id = ?");
+$trainerStmt->execute([$exam_id, $trainee_id]);
+if ($trainerInfo = $trainerStmt->fetch()) {
+    $traineeName = $_SESSION['full_name'] ?? 'A trainee';
+    $statusText = $status === 'pass' ? 'Passed' : 'Failed';
+    $msg = "$traineeName just submitted an exam for '{$trainerInfo['module_name']}'. Score: $score% ($statusText)";
+    addNotification($trainerInfo['trainer_id'], "Exam Submitted ($statusText)", $msg, $status === 'pass' ? 'success' : 'warning', "trainer/results.php");
+}
+
 // ── Feature 8: Save per-question answers ────────────────────────────────────
 try {
     $ansStmt = $pdo->prepare("INSERT INTO exam_result_answers (result_id, question_id, trainee_answer, is_correct) VALUES (?, ?, ?, ?)");

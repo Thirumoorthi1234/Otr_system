@@ -330,7 +330,7 @@ renderSidebar('admin');
 </style>
 
 <div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none; max-width: 100%; overflow-x: hidden;">
-    <button onclick="togglePrintPreview()" class="btn-preview-close"><i class="fas fa-times"></i> Close Preview</button>
+
 
     <div class="db-actions-suite" style="margin-bottom: 25px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
@@ -357,9 +357,6 @@ renderSidebar('admin');
         </div>
 
         <div style="display: flex; gap: 15px;">
-            <button onclick="togglePrintPreview()" class="btn" style="background: white; color: #0F172A; border: 1px solid #E2E8F0; padding: 12px 30px; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <i class="fa-solid fa-eye"></i> <?php echo __('Preview & Print'); ?>
-            </button>
             <button onclick="downloadPDF()" class="btn" style="background: #1E293B; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
                 <i class="fa-solid fa-file-pdf"></i> <?php echo __('Generate PDF'); ?>
             </button>

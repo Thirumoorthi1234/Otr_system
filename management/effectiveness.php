@@ -161,7 +161,7 @@ renderSidebar('management');
     }
 </style>
 
-    <button onclick="togglePrintPreview()" class="btn-preview-close"><i class="fas fa-times"></i> Close Preview</button>
+
 
     <div class="eff-header">
         <div class="eff-tabs">
@@ -171,9 +171,6 @@ renderSidebar('management');
         </div>
         
         <div style="display: flex; gap: 10px;">
-            <button onclick="togglePrintPreview()" class="btn" style="background: white; color: #0F172A; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 2px solid #E2E8F0; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-eye"></i> Preview & Print
-            </button>
             <button onclick="exportEffReport()" id="exportBtn" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-file-pdf"></i> Generate PDF
             </button>

@@ -20,10 +20,11 @@ if (!$imageData || !$assignment_id) {
     exit();
 }
 
-// Verify assignment belongs to this trainee
-$stmt = $pdo->prepare("SELECT id FROM assignments WHERE id=? AND trainee_id=?");
+// Verify assignment belongs to this trainee and get trainer_id
+$stmt = $pdo->prepare("SELECT a.id, a.trainer_id, m.title as module_name FROM assignments a JOIN training_modules m ON a.module_id = m.id WHERE a.id=? AND a.trainee_id=?");
 $stmt->execute([$assignment_id, $trainee_id]);
-if (!$stmt->fetch()) {
+$assignment = $stmt->fetch();
+if (!$assignment) {
     echo json_encode(['success' => false, 'error' => 'Assignment not found']);
     exit();
 }
@@ -51,5 +52,16 @@ if (!file_put_contents($filepath, $decodedImage)) {
 // Save record
 $stmt = $pdo->prepare("INSERT INTO ojt_evidence (assignment_id, trainee_id, photo_path, caption) VALUES (?, ?, ?, ?)");
 $stmt->execute([$assignment_id, $trainee_id, $webPath, $caption]);
+
+// Notify trainer
+$trainee_name = $_SESSION['full_name'] ?? 'A trainee';
+$module_name = $assignment['module_name'] ?? 'OJT';
+addNotification(
+    $assignment['trainer_id'],
+    "New OJT Evidence",
+    "$trainee_name uploaded evidence for '$module_name'.",
+    "info",
+    "trainer/ojt_evidence.php?assignment_id=$assignment_id&filter=pending"
+);
 
 echo json_encode(['success' => true, 'path' => $webPath, 'id' => $pdo->lastInsertId()]);

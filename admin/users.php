@@ -44,14 +44,31 @@ if (isset($_POST['save_user'])) {
         }
     }
 
+    $old_emp_id = trim($_POST['old_emp_id'] ?? '') ?: null;
+    $reporting_to_code = trim($_POST['reporting_to_code'] ?? '') ?: null;
+    $reporting_to_name = trim($_POST['reporting_to_name'] ?? '') ?: null;
+    $date_of_re_joining = trim($_POST['date_of_re_joining'] ?? '') ?: null;
+    $uid_emp_no = trim($_POST['uid_emp_no'] ?? '') ?: null;
+    $business = trim($_POST['business'] ?? '') ?: null;
+    $region = trim($_POST['region'] ?? '') ?: null;
+    $location = trim($_POST['location'] ?? '') ?: null;
+    $work_location = trim($_POST['work_location'] ?? '') ?: null;
+    $org_unit_1 = trim($_POST['org_unit_1'] ?? '') ?: null;
+    $org_unit_2 = trim($_POST['org_unit_2'] ?? '') ?: null;
+    $roll = trim($_POST['roll'] ?? '') ?: null;
+    $sub_category = trim($_POST['sub_category'] ?? '') ?: null;
+    $payroll_group = trim($_POST['payroll_group'] ?? '') ?: null;
+    $gender = trim($_POST['gender'] ?? '') ?: null;
+    $home_town = trim($_POST['home_town'] ?? '') ?: null;
+
     if ($_POST['user_id']) {
         // Update user
-        $sql = "UPDATE users SET username=?, full_name=?, role=?, employee_id=?, qualification=?, doj=?, dol=?, category=?, batch_number=?, department=?, photo_path=?, mobile_number=?, aadhar_number=? WHERE id=?";
-        $params = [$username, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number, $_POST['user_id']];
+        $sql = "UPDATE users SET username=?, full_name=?, role=?, employee_id=?, qualification=?, doj=?, dol=?, category=?, batch_number=?, department=?, photo_path=?, mobile_number=?, aadhar_number=?, old_emp_id=?, reporting_to_code=?, reporting_to_name=?, date_of_re_joining=?, uid_emp_no=?, business=?, region=?, location=?, work_location=?, org_unit_1=?, org_unit_2=?, roll=?, sub_category=?, payroll_group=?, gender=?, home_town=? WHERE id=?";
+        $params = [$username, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number, $old_emp_id, $reporting_to_code, $reporting_to_name, $date_of_re_joining, $uid_emp_no, $business, $region, $location, $work_location, $org_unit_1, $org_unit_2, $roll, $sub_category, $payroll_group, $gender, $home_town, $_POST['user_id']];
 
         if (!empty($_POST['password'])) {
-            $sql = "UPDATE users SET username=?, full_name=?, role=?, employee_id=?, qualification=?, doj=?, dol=?, category=?, batch_number=?, department=?, photo_path=?, mobile_number=?, aadhar_number=?, password=? WHERE id=?";
-            $params = [$username, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number, password_hash($_POST['password'], PASSWORD_DEFAULT), $_POST['user_id']];
+            $sql = "UPDATE users SET username=?, full_name=?, role=?, employee_id=?, qualification=?, doj=?, dol=?, category=?, batch_number=?, department=?, photo_path=?, mobile_number=?, aadhar_number=?, password=?, old_emp_id=?, reporting_to_code=?, reporting_to_name=?, date_of_re_joining=?, uid_emp_no=?, business=?, region=?, location=?, work_location=?, org_unit_1=?, org_unit_2=?, roll=?, sub_category=?, payroll_group=?, gender=?, home_town=? WHERE id=?";
+            $params = [$username, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number, password_hash($_POST['password'], PASSWORD_DEFAULT), $old_emp_id, $reporting_to_code, $reporting_to_name, $date_of_re_joining, $uid_emp_no, $business, $region, $location, $work_location, $org_unit_1, $org_unit_2, $roll, $sub_category, $payroll_group, $gender, $home_town, $_POST['user_id']];
         }
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -60,8 +77,8 @@ if (isset($_POST['save_user'])) {
         // Create user
         $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, role, employee_id, qualification, doj, dol, category, batch_number, department, photo_path, mobile_number, aadhar_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$username, $password, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number]);
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, role, employee_id, qualification, doj, dol, category, batch_number, department, photo_path, mobile_number, aadhar_number, old_emp_id, reporting_to_code, reporting_to_name, date_of_re_joining, uid_emp_no, business, region, location, work_location, org_unit_1, org_unit_2, roll, sub_category, payroll_group, gender, home_town) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$username, $password, $full_name, $role, $employee_id, $qualification, $doj, $dol, $category, $batch_number, $department, $photo_path, $mobile_number, $aadhar_number, $old_emp_id, $reporting_to_code, $reporting_to_name, $date_of_re_joining, $uid_emp_no, $business, $region, $location, $work_location, $org_unit_1, $org_unit_2, $roll, $sub_category, $payroll_group, $gender, $home_town]);
             $message = __("user_created_successfully");
         } catch (PDOException $e) {
             $message = __("Error") . ": " . $e->getMessage();
@@ -85,7 +102,10 @@ renderSidebar($_SESSION['role']);
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <h3><?php echo $action == 'add' ? __('add_new_user') : ($action == 'edit' ? __('edit_user') : __('system_users')); ?></h3>
         <?php if ($action == 'list'): ?>
-            <a href="users.php?action=add" class="btn btn-primary"><?php echo __('add_user'); ?></a>
+            <div>
+                <a href="export_emp_master.php" class="btn" style="background: #10b981; color: white; margin-right: 10px;"><i class="fas fa-file-excel"></i> Export Employee Master</a>
+                <a href="users.php?action=add" class="btn btn-primary"><?php echo __('add_user'); ?></a>
+            </div>
         <?php else: ?>
             <a href="users.php" class="btn" style="background: #4A5568; color: white;"><?php echo __('back_to_list'); ?></a>
         <?php endif; ?>
@@ -391,6 +411,78 @@ renderSidebar($_SESSION['role']);
                     <div class="form-group">
                         <label class="form-label"><?php echo __('date_of_leaving'); ?> (DOL)</label>
                         <input type="date" name="dol" class="form-control" value="<?php echo $user['dol'] ?? ''; ?>">
+                    </div>
+                </div>
+                <div style="margin-top: 20px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">Employee Master Additional Details</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label class="form-label">Old Emp Id</label>
+                        <input type="text" name="old_emp_id" class="form-control" value="<?php echo e($user['old_emp_id'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">UID Emp No</label>
+                        <input type="text" name="uid_emp_no" class="form-control" value="<?php echo e($user['uid_emp_no'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reporting To Code</label>
+                        <input type="text" name="reporting_to_code" class="form-control" value="<?php echo e($user['reporting_to_code'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reporting To Name</label>
+                        <input type="text" name="reporting_to_name" class="form-control" value="<?php echo e($user['reporting_to_name'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of Re-joining</label>
+                        <input type="date" name="date_of_re_joining" class="form-control" value="<?php echo $user['date_of_re_joining'] ?? ''; ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <select name="gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male" <?php echo ($user['gender'] ?? '') == 'Male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="Female" <?php echo ($user['gender'] ?? '') == 'Female' ? 'selected' : ''; ?>>Female</option>
+                            <option value="Other" <?php echo ($user['gender'] ?? '') == 'Other' ? 'selected' : ''; ?>>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Business</label>
+                        <input type="text" name="business" class="form-control" value="<?php echo e($user['business'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Region</label>
+                        <input type="text" name="region" class="form-control" value="<?php echo e($user['region'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" name="location" class="form-control" value="<?php echo e($user['location'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Work Location</label>
+                        <input type="text" name="work_location" class="form-control" value="<?php echo e($user['work_location'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Org Unit - 1</label>
+                        <input type="text" name="org_unit_1" class="form-control" value="<?php echo e($user['org_unit_1'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Org Unit - 2</label>
+                        <input type="text" name="org_unit_2" class="form-control" value="<?php echo e($user['org_unit_2'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Roll</label>
+                        <input type="text" name="roll" class="form-control" value="<?php echo e($user['roll'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sub Category</label>
+                        <input type="text" name="sub_category" class="form-control" value="<?php echo e($user['sub_category'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payroll Group</label>
+                        <input type="text" name="payroll_group" class="form-control" value="<?php echo e($user['payroll_group'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Home Town</label>
+                        <input type="text" name="home_town" class="form-control" value="<?php echo e($user['home_town'] ?? ''); ?>">
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
