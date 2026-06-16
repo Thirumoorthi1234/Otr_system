@@ -244,7 +244,7 @@ renderSidebar('trainer');
     .sm-rh-field input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
     
     /* ── Scroll Container ── */
-    .sm-scroll { overflow: auto; max-height: 72vh; }
+    .sm-scroll { overflow-x: auto; padding-bottom: 10px; }
     
     /* ── Matrix Table ── */
     .sm-table { border-collapse: collapse; width: max-content; min-width: 100%; }
@@ -274,10 +274,23 @@ renderSidebar('trainer');
     }
     .sm-skill-header {
         background: #EFF6FF !important; color: #1E3A8A;
-        font-weight: 700; font-size: 0.7rem; padding: 8px 4px !important;
-        writing-mode: vertical-rl; text-orientation: mixed;
+        padding: 0 !important;
+        height: 120px;
+        vertical-align: bottom;
+    }
+    .vertical-text {
+        writing-mode: vertical-rl;
         transform: rotate(180deg);
-        height: 120px; white-space: nowrap;
+        height: 120px;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 700;
+        font-size: 0.7rem;
+        padding: 8px 0;
+        margin: 0 auto;
+        display: inline-block;
     }
     .sm-required-row td {
         background: #DBEAFE !important; color: #1E40AF;
@@ -489,22 +502,22 @@ renderSidebar('trainer');
                         <th colspan="<?php echo count($operatingSkills); ?>" class="sm-subcat-header" style="background:#D97706 !important;"></th>
                         <?php endif; ?>
                         
-                        <th class="sm-idx-header process" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Total Process skill</th>
-                        <th class="sm-idx-header operating" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Total Operating skill</th>
-                        <th class="sm-idx-header individual" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg); height:100px;">Individual Skill Index</th>
+                        <th class="sm-idx-header process" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg);">Total Process skill</th>
+                        <th class="sm-idx-header operating" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg);">Total Operating skill</th>
+                        <th class="sm-idx-header individual" rowspan="2" style="writing-mode:vertical-rl; transform:rotate(180deg);">Individual Skill Index</th>
                     </tr>
                     
                     <!-- ROW 3: Individual Skill Names (vertical) -->
                     <tr>
                         <?php foreach ($processSkills as $sk): ?>
                         <th class="sm-skill-header" title="<?php echo e($sk['skill_name']); ?>">
-                            <?php echo e($sk['skill_name']); ?>
+                            <div class="vertical-text"><?php echo e($sk['skill_name']); ?></div>
                         </th>
                         <?php endforeach; ?>
                         
                         <?php foreach ($operatingSkills as $sk): ?>
                         <th class="sm-skill-header" title="<?php echo e($sk['skill_name']); ?>">
-                            <?php echo e($sk['skill_name']); ?>
+                            <div class="vertical-text"><?php echo e($sk['skill_name']); ?></div>
                         </th>
                         <?php endforeach; ?>
                     </tr>
