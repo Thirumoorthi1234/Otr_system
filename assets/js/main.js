@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Initialize DataTables ──────────────────────────────────
     if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        $('.table-container table').each(function() {
+        $('.table-container table').not('.no-datatable').each(function() {
             var table = $(this);
             var hasDetails = false;
             

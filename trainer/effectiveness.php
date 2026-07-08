@@ -132,9 +132,9 @@ renderSidebar('trainer');
         </h2>
         
         <div style="display: flex; gap: 10px;">
-            <button onclick="exportEffReport()" id="exportBtn" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <a href="export_effectiveness.php" target="_blank" id="exportBtn" class="btn" style="background: linear-gradient(135deg, #0F172A, #334155); color: white; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none;">
                 <i class="fas fa-file-pdf"></i> Generate PDF
-            </button>
+            </a>
         </div>
     </div>
     

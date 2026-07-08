@@ -253,11 +253,11 @@ renderSidebar('management');
     }
     /* Print Mode Styles */
     @media print {
+        html, body { background: white !important; overflow: visible !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
         .sidebar, .header, .footer, .report-nav-group, .btn-preview-close { display: none !important; }
-        .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
-        .dashboard-container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; }
+        .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; height: auto !important; }
+        .dashboard-container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
         .chart-card, .rpt-stat-card, .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #E2E8F0 !important; }
-        body { background: white !important; }
     }
 
     .preview-mode-active .sidebar, 
@@ -889,117 +889,11 @@ function togglePrintPreview() {
     }
 }
 function exportReport() {
-    const element = document.getElementById('report-content');
-    const container = element.querySelector('.dashboard-container');
-    const sidebar = document.querySelector('.sidebar');
-    const header = document.querySelector('.header');
-    const mainContent = document.querySelector('.main-content');
-    
-    const isEmployeeReport = <?php echo $report_type == 'employee' || $report_type == 'completion' || $report_type == 'performance' ? 'true' : 'false'; ?>;
-    
-    const btn = event.currentTarget || document.querySelector('button[onclick="exportReport()"]');
-    const origText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-
-    // Save Original States
-    const originalStyles = {
-        sidebarDisplay: sidebar ? sidebar.style.display : '',
-        headerDisplay: header ? header.style.display : '',
-        mainMargin: mainContent ? mainContent.style.marginLeft : '',
-        mainPadding: mainContent ? mainContent.style.padding : '',
-        elementWidth: element.style.width
-    };
-
-    const targetWidth = isEmployeeReport ? 800 : 1100;
-
-    // Temporary Clean Slate for Capture
-    if (sidebar) sidebar.style.display = 'none';
-    if (header) header.style.display = 'none';
-    if (mainContent) {
-        mainContent.style.marginLeft = '0';
-        mainContent.style.padding = '0';
-    }
-    element.style.width = targetWidth + 'px';
-    
-    if (container) {
-        container.classList.add('pdf-export-mode');
-        if (isEmployeeReport) {
-            container.classList.add('pdf-export-mode-portrait');
-        }
-    }
-    
-    // Shift view to top for consistent capture
-    window.scrollTo(0, 0);
-
+    // Rely entirely on @media print CSS rules for clean vector output
+    // A slight delay ensures Chart.js renders before print if needed, though mostly it's immediate
     setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Capturing...';
-        
-        const rect = element.getBoundingClientRect();
-
-        const opt = {
-            margin:       [0.3, 0.3, 0.3, 0.3],
-            filename:     'OTR_Analytical_Report.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true, 
-                width: rect.width,
-                height: rect.height + 20, // Add buffer for legends/borders
-                windowWidth: rect.width,
-                x: rect.left,
-                y: rect.top,
-                logging: false, 
-                allowTaint: true 
-            },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: isEmployeeReport ? 'portrait' : 'landscape' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            // Restore Original States
-            if (sidebar) sidebar.style.display = originalStyles.sidebarDisplay;
-            if (header) header.style.display = originalStyles.headerDisplay;
-            if (mainContent) {
-                mainContent.style.marginLeft = originalStyles.mainMargin;
-                mainContent.style.padding = originalStyles.mainPadding;
-            }
-            element.style.width = originalStyles.elementWidth;
-            
-            if (container) {
-                container.classList.remove('pdf-export-mode');
-                container.classList.remove('pdf-export-mode-portrait');
-            }
-            
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> Downloaded!';
-            btn.style.background = 'linear-gradient(135deg, #059669, #10B981)';
-            setTimeout(() => {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.background = 'linear-gradient(135deg, #0F172A, #334155)';
-            }, 2000);
-        }).catch((err) => {
-            console.error('PDF Export Error:', err);
-            if (sidebar) sidebar.style.display = originalStyles.sidebarDisplay;
-            if (header) header.style.display = originalStyles.headerDisplay;
-            if (mainContent) {
-                mainContent.style.marginLeft = originalStyles.mainMargin;
-                mainContent.style.padding = originalStyles.mainPadding;
-            }
-            element.style.width = originalStyles.elementWidth;
-            
-            if (container) {
-                container.classList.remove('pdf-export-mode');
-                container.classList.remove('pdf-export-mode-portrait');
-            }
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry';
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            setTimeout(() => { btn.innerHTML = origText; }, 3000);
-        });
-    }, 700); 
+        window.print();
+    }, 100);
 }
 </script>
 

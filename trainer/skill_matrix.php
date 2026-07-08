@@ -189,7 +189,15 @@ renderSidebar('trainer');
        SYRMA SGS SKILL MATRIX — Corporate Design
        ═══════════════════════════════════════════ */
     
-    .sm-page { padding: 20px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+    /* Override main-content to prevent it from being stretched by the wide table */
+    .main-content { min-width: 0; }
+    
+    .sm-page { 
+        padding: 20px; 
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; 
+        width: 100%; 
+        box-sizing: border-box; 
+    }
     
     /* ── Report Selector ── */
     .sm-report-bar {
@@ -244,14 +252,22 @@ renderSidebar('trainer');
     .sm-rh-field input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
     
     /* ── Scroll Container ── */
-    .sm-scroll { overflow-x: auto; padding-bottom: 10px; }
+    .sm-scroll { height: calc(100vh - 280px); min-height: 300px; overflow: auto; }
+    .sm-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+    .sm-scroll::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 4px; }
+    .sm-scroll::-webkit-scrollbar-thumb { background: #94A3B8; border-radius: 4px; }
+    .sm-scroll::-webkit-scrollbar-thumb:hover { background: #64748B; }
     
     /* ── Matrix Table ── */
-    .sm-table { border-collapse: collapse; width: max-content; min-width: 100%; }
+    .sm-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; }
+    .sm-table thead { position: sticky; top: 0; z-index: 40; }
     .sm-table th, .sm-table td {
-        border: 1px solid #CBD5E1; padding: 0; text-align: center; vertical-align: middle;
+        border-right: 1px solid #CBD5E1; border-bottom: 1px solid #CBD5E1; 
+        padding: 0; text-align: center; vertical-align: middle;
         font-size: 0.78rem; position: relative;
     }
+    .sm-table th { border-top: 1px solid #CBD5E1; }
+    .sm-table th:first-child, .sm-table td:first-child { border-left: 1px solid #CBD5E1; }
     
     /* ── Sticky columns (S.No, Emp no, Name) ── */
     .sm-table .col-sno   { position: sticky; left: 0; z-index: 20; width: 40px; min-width: 40px; background: #fff; }
@@ -259,7 +275,7 @@ renderSidebar('trainer');
     .sm-table .col-name   { position: sticky; left: 110px; z-index: 20; width: 130px; min-width: 130px; background: #fff; text-align: left; }
     .sm-table thead .col-sno,
     .sm-table thead .col-empno,
-    .sm-table thead .col-name { z-index: 30; }
+    .sm-table thead .col-name { z-index: 50; }
     
     /* ── Category Header Rows ── */
     .sm-cat-header {
@@ -275,20 +291,21 @@ renderSidebar('trainer');
     .sm-skill-header {
         background: #EFF6FF !important; color: #1E3A8A;
         padding: 0 !important;
-        height: 120px;
+        height: 80px;
+        min-width: 45px;
         vertical-align: bottom;
     }
     .vertical-text {
         writing-mode: vertical-rl;
         transform: rotate(180deg);
-        height: 120px;
+        height: 80px;
         width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         font-weight: 700;
         font-size: 0.7rem;
-        padding: 8px 0;
+        padding: 4px 0;
         margin: 0 auto;
         display: inline-block;
     }
@@ -435,7 +452,7 @@ renderSidebar('trainer');
     <!-- ═══ Matrix Container ═══ -->
     <div class="sm-matrix-wrap">
         
-        <!-- ── Report Header ── -->
+        <!-- ── Report Header (Responsive) ── -->
         <div class="sm-report-header">
             <div class="sm-rh-top">
                 <div class="sm-rh-logo">
@@ -471,7 +488,7 @@ renderSidebar('trainer');
         <div class="sm-scroll">
             <table class="sm-table" id="skillMatrixTable">
                 <thead>
-                    <!-- ROW 1: Category Groups -->
+                <!-- ROW 1: Category Groups -->
                     <tr>
                         <th class="col-sno sm-cat-header" rowspan="3" style="background:#0F172A !important;">S.No</th>
                         <th class="col-empno sm-cat-header" rowspan="3" style="background:#0F172A !important;">Emp no.</th>
@@ -606,7 +623,7 @@ renderSidebar('trainer');
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
+        </div> <!-- Close sm-scroll -->
         
         <!-- ── Legend ── -->
         <div class="sm-legend">
@@ -619,7 +636,7 @@ renderSidebar('trainer');
                 <i class="fas fa-mouse-pointer"></i> Click any cell to enter/edit score
             </div>
         </div>
-    </div>
+    </div> <!-- Close sm-matrix-wrap -->
     <?php endif; ?>
 </div>
 

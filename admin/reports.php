@@ -329,7 +329,7 @@ renderSidebar('admin');
     }
 </style>
 
-<div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none; max-width: 100%; overflow-x: hidden;">
+<div class="card" style="border: none; background: transparent; padding: 0; box-shadow: none; max-width: 100%;">
 
 
     <div class="db-actions-suite" style="margin-bottom: 25px;">
@@ -364,7 +364,7 @@ renderSidebar('admin');
     </div>
 
     <!-- MAIN EXPORT CONTAINER -->
-    <div class="print-wrapper" id="report-content">
+    <div class="print-wrapper" id="report-content" style="min-height: 30vh;">
         
         <?php if ($report_type == 'overview'): ?>
         <!-- VISUAL DASHBOARD -->

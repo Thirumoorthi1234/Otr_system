@@ -130,7 +130,7 @@ renderSidebar($_SESSION['role']);
             <?php endif; ?>
 
             <div class="table-container">
-                <table>
+                <table id="inductionRecordsTable" class="no-datatable">
                     <thead>
                         <tr>
                             <th><?php echo __('Day'); ?></th>
